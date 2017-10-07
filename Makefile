@@ -42,7 +42,7 @@ ${HEX}: ${BIN}
 	$(OBJCOPY) -O ihex -R .eeprom $< $@
 
 ${BIN}: ${OBJS}
-	$(CC) $(LDFLAGS) -o $@ $< $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
