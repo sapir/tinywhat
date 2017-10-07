@@ -48,12 +48,16 @@ struct token {
     };
 } __attribute__((packed));
 
-static inline int get_token_size(struct token *tok) {
+static inline int get_token_type_size(int type) {
     return 1 + (
-        tok->type < TOKEN_KEYWORD ? 0
-        : tok->type < TOKEN_NUMBER ? sizeof(char)
+        type < TOKEN_KEYWORD ? 0
+        : type < TOKEN_NUMBER ? sizeof(char)
         : sizeof(int)
     );
+}
+
+static inline int get_token_size(struct token *tok) {
+    return get_token_type_size(tok->type);
 }
 
 static inline struct token *get_next_token(struct token *tok) {

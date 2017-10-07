@@ -130,8 +130,40 @@ static int func_eq(struct token *tok, size_t size)
 
 static int func_for(struct token *tok, size_t size)
 {
-    // TODO
-    return 0;
+    if (tok->type != TOKEN_VAR) {
+        printf("syntax error\n");
+        return 0;
+    }
+
+    int var = tok->var;
+    skip_arg(tok, size, get_token_type_size(TOKEN_VAR));
+
+    int start;
+    if (!more_args(tok, size)) {
+        printf("syntax error\n");
+        return 0;
+    }
+    set_next_arg(start, tok, size);
+
+    int end;
+    if (!more_args(tok, size)) {
+        printf("syntax error\n");
+        return 0;
+    }
+    set_next_arg(end, tok, size);
+
+    struct token *start_tok = tok;
+    size_t start_size = size;
+    for (int i = start; i < end; ++i) {
+        vars[var - 1] = i;
+
+        int val;
+        tok = start_tok;
+        size = start_size;
+        foreach_args(val, tok, size) { (void)val; } end_foreach_args();
+    }
+
+    return end;
 }
 
 static int func_if(struct token *tok, size_t size)
