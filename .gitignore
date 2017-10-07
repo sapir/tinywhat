@@ -2,3 +2,6 @@
 *.bin
 *.hex
 .sconsign.dblite
+build_at
+build_test
+test
