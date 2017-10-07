@@ -1,6 +1,23 @@
+#include <assert.h>
 #include <stdio.h>
+#include <string.h>
 #include "lexer.h"
+#include "eval.h"
 
+
+char exec_buf[256];
+size_t exec_buf_used = 0;
+char num_parens = 0;
+
+
+static void execute(char *buf, size_t size)
+{
+    struct token *tok = (struct token*)buf;
+    assert((char*)get_next_token(tok) <= buf + size);
+    size_t used;
+    int res = eval(tok, size, &used);
+    printf(" -> %d\n", res);
+}
 
 int main()
 {
@@ -10,32 +27,22 @@ int main()
             break;
 
         if (lexer_input(c)) {
-            printf("token: ");
-            switch (last_token.type) {
-            case TOKEN_LPARENS: printf("(\n"); break;
-            case TOKEN_RPARENS: printf(")\n"); break;
-            case TOKEN_KEYWORD:
-                switch (last_token.kwd) {
-                case KWD_BAD: printf("BAD\n"); break;
-                case KWD_add: printf("add\n"); break;
-                case KWD_cfgio: printf("cfgio\n"); break;
-                case KWD_def: printf("def\n"); break;
-                case KWD_div: printf("div\n"); break;
-                case KWD_eq: printf("eq\n"); break;
-                case KWD_for: printf("for\n"); break;
-                case KWD_if: printf("if\n"); break;
-                case KWD_io: printf("io\n"); break;
-                case KWD_let: printf("let\n"); break;
-                case KWD_mod: printf("mod\n"); break;
-                case KWD_mul: printf("mul\n"); break;
-                case KWD_pwm: printf("pwm\n"); break;
-                case KWD_sub: printf("sub\n"); break;
-                case KWD_wait: printf("wait\n"); break;
-                }
-                break;
+            int tok_size = get_token_size(&last_token);
+            if (tok_size > sizeof(exec_buf) - exec_buf_used) {
+                printf("oom, clearing exec buf\n");
+                exec_buf_used = 0;
+                num_parens = 0;
+            } else {
+                memcpy(exec_buf + exec_buf_used, &last_token, tok_size);
+                exec_buf_used += tok_size;
+            }
 
-            case TOKEN_NUMBER: printf("%d\n", last_token.num); break;
-            case TOKEN_VAR: printf("%c\n", last_token.var + 'A'); break;
+            if (last_token.type == TOKEN_LPARENS) ++num_parens;
+            else if (last_token.type == TOKEN_RPARENS) --num_parens;
+
+            if (num_parens == 0) {
+                execute(exec_buf, exec_buf_used);
+                exec_buf_used = 0;
             }
         }
     }

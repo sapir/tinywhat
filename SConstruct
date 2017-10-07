@@ -1,5 +1,6 @@
 srcs = Split(
     '''
+    eval.c
     lexer.c
     ''')
 
