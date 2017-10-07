@@ -11,6 +11,7 @@ Program(
     source=Split(
         '''
         atmain.c
+        lexer.c
         '''),
 )
 
