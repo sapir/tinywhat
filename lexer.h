@@ -5,13 +5,19 @@
 #include <stdbool.h>
 
 
+// note get_token_size assumes enum order here
 enum token_type {
+    // no extra data
     TOKEN_NULL,
     TOKEN_LPARENS,
     TOKEN_RPARENS,
+
+    // extra data of sizeof(char)
     TOKEN_KEYWORD,
-    TOKEN_NUMBER,
     TOKEN_VAR,
+
+    // extra data of sizeof(int)
+    TOKEN_NUMBER,
 };
 
 enum keyword {
@@ -43,7 +49,11 @@ struct token {
 } __attribute__((packed));
 
 static inline int get_token_size(struct token *tok) {
-    return 1 + (tok->type == TOKEN_NUMBER ? sizeof(int) : sizeof(char));
+    return 1 + (
+        tok->type < TOKEN_KEYWORD ? 0
+        : tok->type < TOKEN_NUMBER ? sizeof(char)
+        : sizeof(int)
+    );
 }
 
 static inline struct token *get_next_token(struct token *tok) {
