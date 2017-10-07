@@ -84,8 +84,8 @@ bool lexer_input(char c)
         case 'f': cur_token.kwd = KWD_for; break;
         case 'i': cur_token.kwd = KWD_if; break;
         // case 'i': cur_token.kwd = KWD_io; break;
-        case 'l': cur_token.kwd = KWD_let; break;
         case 'p': cur_token.kwd = KWD_pwm; break;
+        case 's': cur_token.kwd = KWD_set; break;
         case 'w': cur_token.kwd = KWD_wait; break;
         default: cur_token.kwd = KWD_BAD; break;
         }

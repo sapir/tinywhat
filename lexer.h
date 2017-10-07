@@ -30,10 +30,10 @@ enum keyword {
     KWD_for,
     KWD_if,
     KWD_io,
-    KWD_let,
     KWD_mod,
     KWD_mul,
     KWD_pwm,
+    KWD_set,
     KWD_sub,
     KWD_wait,
 };
