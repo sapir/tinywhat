@@ -16,14 +16,15 @@ struct saved_func {
 
 
 struct saved_func *lookup_func(char name);
-// note this "clears" the scratch buffer - used value is reset but data stays
-// put, so as not to invalidate pointers to the scratch buffer, because of
+// note this "clears" the scratch buffer - 'used' counter is reset but data
+// stays put, so as not to invalidate pointers to the scratch buffer, because of
 // save_func_from_scratch's flow.
 void remove_func(struct saved_func *sf);
 void *get_scratch_buf_ptr(void);
 size_t get_scratch_buf_used(void);
 size_t get_scratch_buf_avail(void);
 size_t get_scratch_buf_capacity(void);
+// reset 'used' counter
 void clear_scratch(void);
 // false if no room
 bool append_to_scratch(void *buf, size_t size);
