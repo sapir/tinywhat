@@ -19,7 +19,7 @@ env.Append(LINKFLAGS='-w -Os -g -flto -fuse-linker-plugin -Wl,--gc-sections -mmc
 
 env.Program(
     'attiny44.bin',
-    source=['atmain.c'] + srcs,
+    source=['atmain.c', 'atio.c'] + srcs,
     srcdir='build_at',
 )
 
@@ -33,7 +33,7 @@ env.Command(
 test_env = Environment()
 test_env.Program(
     'test',
-    source=['testmain.c'] + srcs,
+    source=['testmain.c', 'testio.c'] + srcs,
     srcdir='build_test',
 )
 
