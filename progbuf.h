@@ -21,11 +21,13 @@ struct saved_func *lookup_func(char name);
 // save_func_from_scratch's flow.
 void remove_func(struct saved_func *sf);
 void *get_scratch_buf_ptr(void);
+void *get_scratch_buf_end(void);
 size_t get_scratch_buf_used(void);
 size_t get_scratch_buf_avail(void);
 size_t get_scratch_buf_capacity(void);
 // reset 'used' counter
 void clear_scratch(void);
+bool is_in_scratch(void *ptr);
 // false if no room
 bool append_to_scratch(void *buf, size_t size);
 // saves buffer as a function and clears scratch buffer, because scratch memory

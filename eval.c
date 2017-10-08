@@ -109,7 +109,11 @@ static int func_def(struct token *tok, size_t size)
     // strip off useless rparens, don't bother saving it
     size -= get_token_type_size(TOKEN_RPARENS);
 
-    // TODO: assumes (def) wasn't used inside a function...
+    if (!is_in_scratch(tok)) {
+        printf("can't call (def) from a stored function\n");
+        return 0;
+    }
+
     if (!save_func_from_scratch(name, tok, size)) {
         printf("oom\n");
         return 0;

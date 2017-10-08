@@ -51,6 +51,11 @@ void *get_scratch_buf_ptr(void)
     return global_buf + used_for_funcs;
 }
 
+void *get_scratch_buf_end(void)
+{
+    return global_buf + sizeof(global_buf);
+}
+
 size_t get_scratch_buf_used(void)
 {
     return used_for_scratch;
@@ -69,6 +74,11 @@ size_t get_scratch_buf_avail(void)
 void clear_scratch(void)
 {
     used_for_scratch = 0;
+}
+
+bool is_in_scratch(void *ptr)
+{
+    return (get_scratch_buf_ptr() <= ptr && ptr < get_scratch_buf_end());
 }
 
 bool append_to_scratch(void *buf, size_t size)
