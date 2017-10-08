@@ -37,6 +37,7 @@ enum keyword {
     KWD_pwm,
     KWD_set,
     KWD_sub,
+    KWD_undef,
     KWD_wait,
 };
 

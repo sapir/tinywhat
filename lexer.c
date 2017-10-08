@@ -106,6 +106,7 @@ bool lexer_input(char c)
         // case 'i': cur_token.kwd = KWD_io; break;
         case 'p': cur_token.kwd = KWD_pwm; break;
         case 's': cur_token.kwd = KWD_set; break;
+        case 'u': cur_token.kwd = KWD_undef; break;
         case 'w': cur_token.kwd = KWD_wait; break;
         default: cur_token.kwd = KWD_BAD; break;
         }

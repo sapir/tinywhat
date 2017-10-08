@@ -3,7 +3,7 @@
 #include "progbuf.h"
 
 
-// must be enough for lparens, unset/undef, name token, and rparens
+// must be enough for lparens, undef, name token, and rparens
 #define MIN_SCRATCH_CAPACITY 6
 
 

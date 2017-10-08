@@ -287,6 +287,23 @@ static int func_sub(struct token *tok, size_t size)
     return res;
 }
 
+static int func_undef(struct token *tok, size_t size)
+{
+    if (tok->type != TOKEN_UDF) {
+        printf("syntax error\n");
+        return 0;
+    }
+
+    char name = tok->udf_name;
+    struct saved_func *sf = lookup_func(name);
+    if (sf) {
+        remove_func(sf);
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 static int func_wait(struct token *tok, size_t size)
 {
     printf("wait\n");
@@ -348,6 +365,7 @@ static int eval_func(struct token *tok, size_t size)
             case KWD_pwm:   return func_pwm(tok, size);
             case KWD_set:   return func_set(tok, size);
             case KWD_sub:   return func_sub(tok, size);
+            case KWD_undef: return func_undef(tok, size);
             case KWD_wait:  return func_wait(tok, size);
             }
             break;
