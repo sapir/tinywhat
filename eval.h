@@ -2,6 +2,7 @@
 #define EVAL_H
 
 
+#include <stddef.h>
 #include "lexer.h"
 
 
