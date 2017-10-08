@@ -293,6 +293,33 @@ static int func_wait(struct token *tok, size_t size)
     return 0;
 }
 
+static int eval_udf_call(char name, struct token *tok, size_t size)
+{
+    struct saved_func *sf = lookup_func(name);
+    if (!sf)
+        return 0;
+
+    struct token *sf_tok = (struct token*)sf->buf;
+    size_t sf_size = sf->size;
+    if (!more_args(sf_tok, sf_size))
+        return 0;
+
+    if (sf_tok->type == TOKEN_VAR) {
+        int i = sf_tok->var_index;
+        skip_arg(sf_tok, sf_size, get_token_type_size(TOKEN_VAR));
+
+        // set arguments starting at start_var
+        int val;
+        foreach_args(val, tok, size) {
+            vars[i] = val;
+            ++i;
+            i %= NUM_VARS;
+        } end_foreach_args();
+    }
+
+    return exec_block(sf_tok, sf_size);
+}
+
 static int eval_func(struct token *tok, size_t size)
 {
     // identify function
@@ -328,13 +355,10 @@ static int eval_func(struct token *tok, size_t size)
 
     case TOKEN_UDF:
         {
-            struct saved_func *sf = lookup_func(tok->udf_name);
-            if (!sf) {
-                return 0;
-            }
-
-            // TODO: arguments?
-            return exec_block((struct token*)sf->buf, sf->size);
+            char name = tok->udf_name;
+            size -= get_token_size(tok);
+            tok = get_next_token(tok);
+            return eval_udf_call(name, tok, size);
         }
     }
 
