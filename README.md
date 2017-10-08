@@ -1,1 +1,5 @@
-I/O control system for ATtiny
+# tinywhat
+
+Simple interpreted programming language for ATtiny
+
+(still a WIP)
