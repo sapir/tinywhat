@@ -59,7 +59,7 @@ bool lexer_input(char c)
 
         if (cur_token.type == TOKEN_VAR || cur_token.type == TOKEN_UDF) {
             if (cur_token.var == 0)
-                cur_token.var = c - 'A' + 1;
+                cur_token.var = c - 'a' + 1;
             return false;
         }
 
