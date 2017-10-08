@@ -106,6 +106,9 @@ static int func_def(struct token *tok, size_t size)
     char name = tok->udf_name;
     skip_arg(tok, size, get_token_type_size(TOKEN_UDF));
 
+    // strip off useless rparens, don't bother saving it
+    size -= get_token_type_size(TOKEN_RPARENS);
+
     // TODO: assumes (def) wasn't used inside a function...
     if (!save_func_from_scratch(name, tok, size)) {
         printf("oom\n");
