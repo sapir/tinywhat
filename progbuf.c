@@ -15,6 +15,12 @@ static size_t used_for_scratch = 0;
 #define MAX_FUNCS_SIZE (sizeof(global_buf) - MIN_SCRATCH_CAPACITY)
 
 
+static size_t get_saved_func_size(struct saved_func *sf)
+{
+    return sizeof(struct saved_func) + sf->size;
+}
+
+
 struct saved_func *lookup_func(char name)
 {
     size_t i = 0;
@@ -23,7 +29,7 @@ struct saved_func *lookup_func(char name)
         if (sf->name == name)
             return sf;
 
-        i += sf->size;
+        i += get_saved_func_size(sf);
     }
 
     return NULL;
@@ -31,7 +37,7 @@ struct saved_func *lookup_func(char name)
 
 void remove_func(struct saved_func *sf)
 {
-    size_t sf_size = sizeof(struct saved_func) + sf->size;
+    size_t sf_size = get_saved_func_size(sf);
     void *sf_end = (void*)sf + sf_size;
     // only move bit up to used_for_funcs, so we don't ruin existing pointers
     // to scratch buffer when this is called from save_func_from_scratch().
