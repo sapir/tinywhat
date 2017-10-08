@@ -35,6 +35,7 @@ static size_t get_arg_size(struct token *tok, size_t size)
 {
     switch (tok->type) {
     case TOKEN_VAR:
+    case TOKEN_UDF:
     case TOKEN_NUMBER:
         return get_token_size(tok);
 

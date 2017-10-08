@@ -15,6 +15,7 @@ enum token_type {
     // extra data of sizeof(char)
     TOKEN_KEYWORD,
     TOKEN_VAR,
+    TOKEN_UDF,
 
     // extra data of sizeof(int)
     TOKEN_NUMBER,

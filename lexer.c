@@ -22,13 +22,15 @@ static bool last_token_is_valid(void) {
 bool lexer_input(char c)
 {
     if (isspace(c) || c == '(' || c == ')' || c == '$'
-        || c == '+' || c == '/' || c == '=' || c == '%' || c == '*' || c == '-')
+        || c == '+' || c == '/' || c == '=' || c == '%' || c == '*'
+        || c == '-' || c == '@')
     {
         starttoken();
         switch (c) {
         case '(': cur_token.type = TOKEN_LPARENS; break;
         case ')': cur_token.type = TOKEN_RPARENS; break;
         case '$': cur_token.type = TOKEN_VAR; break;
+        case '@': cur_token.type = TOKEN_UDF; break;
         case '=': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_eq; break;
         case '+': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_add; break;
         case '-': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_sub; break;
@@ -55,7 +57,7 @@ bool lexer_input(char c)
     if (isalpha(c)) {
         c = tolower(c);
 
-        if (cur_token.type == TOKEN_VAR) {
+        if (cur_token.type == TOKEN_VAR || cur_token.type == TOKEN_UDF) {
             if (cur_token.var == 0)
                 cur_token.var = c - 'A' + 1;
             return false;
