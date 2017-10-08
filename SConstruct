@@ -3,6 +3,7 @@ srcs = Split(
     eval.c
     lexer.c
     vars.c
+    progbuf.c
     ''')
 
 VariantDir('build_at', '.', duplicate=0)

@@ -1,10 +1,8 @@
 #include <stdio.h>
 #include "lexer.h"
 #include "vars.h"
+#include "progbuf.h"
 #include "eval.h"
-
-
-char vars[26];
 
 
 static struct token *get_buf_end(struct token *tok, size_t size)
@@ -72,6 +70,15 @@ static size_t get_arg_size(struct token *tok, size_t size)
     }
 
 
+// evaluate expressions until out of room, return last value
+static int exec_block(struct token *tok, size_t size)
+{
+    int val;
+    foreach_args(val, tok, size) { (void)val; } end_foreach_args();
+    return val;
+}
+
+
 static int func_add(struct token *tok, size_t size)
 {
     int res = 0;
@@ -91,8 +98,21 @@ static int func_cfgio(struct token *tok, size_t size)
 
 static int func_def(struct token *tok, size_t size)
 {
-    // TODO
-    return 0;
+    if (tok->type != TOKEN_UDF) {
+        printf("syntax error\n");
+        return 0;
+    }
+
+    char name = tok->udf_name;
+    skip_arg(tok, size, get_token_type_size(TOKEN_UDF));
+
+    // TODO: assumes (def) wasn't used inside a function...
+    if (!save_func_from_scratch(name, tok, size)) {
+        printf("oom\n");
+        return 0;
+    }
+
+    return 1;
 }
 
 static int func_div(struct token *tok, size_t size)
@@ -154,15 +174,9 @@ static int func_for(struct token *tok, size_t size)
     }
     set_next_arg(end, tok, size);
 
-    struct token *start_tok = tok;
-    size_t start_size = size;
     for (int i = start; i < end; ++i) {
         vars[var] = i;
-
-        int val;
-        tok = start_tok;
-        size = start_size;
-        foreach_args(val, tok, size) { (void)val; } end_foreach_args();
+        (void)exec_block(tok, size);
     }
 
     return end;
@@ -304,7 +318,16 @@ static int eval_func(struct token *tok, size_t size)
             break;
         }
 
-    // TODO: user-defined functions
+    case TOKEN_UDF:
+        {
+            struct saved_func *sf = lookup_func(tok->udf_name);
+            if (!sf) {
+                return 0;
+            }
+
+            // TODO: arguments?
+            return exec_block((struct token*)sf->buf, sf->size);
+        }
     }
 
     printf("syntax error\n");
