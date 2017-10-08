@@ -1,5 +1,7 @@
 #include <ctype.h>
+#include <stdio.h>
 #include <string.h>
+#include "vars.h"
 #include "lexer.h"
 
 
@@ -29,8 +31,8 @@ bool lexer_input(char c)
         switch (c) {
         case '(': cur_token.type = TOKEN_LPARENS; break;
         case ')': cur_token.type = TOKEN_RPARENS; break;
-        case '$': cur_token.type = TOKEN_VAR; break;
-        case '@': cur_token.type = TOKEN_UDF; break;
+        case '$': cur_token.type = TOKEN_VAR; cur_token.var_index = -1; break;
+        case '@': cur_token.type = TOKEN_UDF; cur_token.udf_name = -1; break;
         case '=': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_eq; break;
         case '+': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_add; break;
         case '-': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_sub; break;
@@ -57,13 +59,29 @@ bool lexer_input(char c)
     if (isalpha(c)) {
         c = tolower(c);
 
-        if (cur_token.type == TOKEN_VAR || cur_token.type == TOKEN_UDF) {
-            if (cur_token.var == 0)
-                cur_token.var = c - 'a' + 1;
+        if (cur_token.type == TOKEN_VAR) {
+            if (cur_token.var_index < 0) {
+                int index = var_name_to_index(c);
+                if (index < 0) {
+                    printf("bad variable name\n");
+                    // invalidate this token
+                    cur_token.type = TOKEN_KEYWORD;
+                    cur_token.kwd = KWD_BAD;
+                } else {
+                    cur_token.var_index = index;
+                }
+            }
             return false;
         }
 
-        // not part of a var, must be a keyword
+        if (cur_token.type == TOKEN_UDF) {
+            if (cur_token.udf_name < 0) {
+                cur_token.udf_name = c;
+            }
+            return false;
+        }
+
+        // not part of a var or udf, must be a keyword
 
         if (cur_token.type == TOKEN_KEYWORD) {
             // some keywords can't be determined by their first letter. second

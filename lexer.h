@@ -2,6 +2,7 @@
 #define LEXER_H
 
 
+#include <stdint.h>
 #include <stdbool.h>
 
 
@@ -44,7 +45,8 @@ struct token {
     char type;
     union {
         char kwd;
-        char var;
+        int8_t var_index;
+        signed char udf_name;
         int num;
     };
 } __attribute__((packed));

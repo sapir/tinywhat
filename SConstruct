@@ -2,6 +2,7 @@ srcs = Split(
     '''
     eval.c
     lexer.c
+    vars.c
     ''')
 
 VariantDir('build_at', '.', duplicate=0)

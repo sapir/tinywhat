@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "lexer.h"
+#include "vars.h"
 #include "eval.h"
 
 
@@ -136,7 +137,7 @@ static int func_for(struct token *tok, size_t size)
         return 0;
     }
 
-    int var = tok->var;
+    int var = tok->var_index;
     skip_arg(tok, size, get_token_type_size(TOKEN_VAR));
 
     int start;
@@ -156,7 +157,7 @@ static int func_for(struct token *tok, size_t size)
     struct token *start_tok = tok;
     size_t start_size = size;
     for (int i = start; i < end; ++i) {
-        vars[var - 1] = i;
+        vars[var] = i;
 
         int val;
         tok = start_tok;
@@ -198,7 +199,7 @@ static int func_set(struct token *tok, size_t size)
         return 0;
     }
 
-    int var = tok->var;
+    int var = tok->var_index;
     size -= get_token_size(tok);
     tok = get_next_token(tok);
     if (!more_args(tok, size)) {
@@ -208,7 +209,7 @@ static int func_set(struct token *tok, size_t size)
 
     int val;
     set_next_arg(val, tok, size);
-    vars[var - 1] = val;
+    vars[var] = val;
     return val;
 }
 
@@ -315,7 +316,7 @@ int eval(struct token *tok, size_t size, size_t *used)
     switch (tok->type) {
     case TOKEN_VAR:
         *used = get_token_size(tok);
-        return vars[tok->var - 1];
+        return vars[tok->var_index];
 
     case TOKEN_NUMBER:
         *used = get_token_size(tok);
