@@ -101,7 +101,7 @@ bool save_func_from_scratch(char name, void *buf, size_t size)
     if (old)
         remove_func(old);
 
-    struct saved_func *sf = (struct saved_func*)global_buf + used_for_funcs;
+    struct saved_func *sf = (struct saved_func*)(global_buf + used_for_funcs);
     used_for_funcs = funcs_size_after_save;
     sf->name = name;
     sf->size = size;
