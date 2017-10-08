@@ -112,7 +112,7 @@ static int func_div(struct token *tok, size_t size)
         res /= val;
     } end_foreach_args();
 
-    return 0;
+    return res;
 }
 
 static int func_eq(struct token *tok, size_t size)
@@ -262,7 +262,7 @@ static int func_sub(struct token *tok, size_t size)
         res -= val;
     } end_foreach_args();
 
-    return 0;
+    return res;
 }
 
 static int func_wait(struct token *tok, size_t size)
