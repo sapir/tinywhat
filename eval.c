@@ -174,12 +174,13 @@ static int func_for(struct token *tok, size_t size)
     }
     set_next_arg(end, tok, size);
 
+    int val = 0;
     for (int i = start; i < end; ++i) {
         vars[var] = i;
-        (void)exec_block(tok, size);
+        val = exec_block(tok, size);
     }
 
-    return end;
+    return val;
 }
 
 static int func_if(struct token *tok, size_t size)
