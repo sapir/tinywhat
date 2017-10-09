@@ -5,3 +5,6 @@
 build_at
 build_test
 test
+
+*.pyc
+__pycache__
