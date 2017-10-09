@@ -252,7 +252,7 @@ static int func_mod(struct token *tok, size_t size)
         res %= val;
     } end_foreach_args();
 
-    return 0;
+    return res;
 }
 
 static int func_mul(struct token *tok, size_t size)
