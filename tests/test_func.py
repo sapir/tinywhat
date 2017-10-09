@@ -46,6 +46,22 @@ def test_func_args_with_offset():
         )
 
 
+def test_func_args_index_overflow():
+    """
+    when arg index passes last global variable, it starts back at $a.
+    attempt to use more than 8 args overwrites first args with last args.
+    """
+
+    assert_eval(
+        '(def @a $i 0)'
+        '(@a 1 2 3 4 5 6 7 8 9)'
+        '$a\n$b\n$c\n$d\n$e\n$i\n$j\n$k\n',
+        1,
+        0,
+        4, 5, 6, 7, 8, 9, 2, 3,
+    )
+
+
 def test_no_args():
     assert_eval(
         '(def @a (+ 0 5))'
