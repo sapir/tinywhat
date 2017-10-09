@@ -367,6 +367,7 @@ static int eval_func(struct token *tok, size_t size)
             case KWD_sub:   return func_sub(tok, size);
             case KWD_undef: return func_undef(tok, size);
             case KWD_wait:  return func_wait(tok, size);
+            default: break;
             }
             break;
         }
@@ -378,6 +379,8 @@ static int eval_func(struct token *tok, size_t size)
             tok = get_next_token(tok);
             return eval_udf_call(name, tok, size);
         }
+
+    default: break;
     }
 
     printf("syntax error\n");
@@ -408,6 +411,8 @@ int eval(struct token *tok, size_t size, size_t *used)
             }
             break;
         }
+
+    default: break;
     }
 
     printf("syntax error\n");
