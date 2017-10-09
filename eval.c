@@ -406,7 +406,7 @@ int eval(struct token *tok, size_t size, size_t *used)
         {
             size_t rparens = find_rparens(tok, size);
             if (rparens > 0) {
-                *used = rparens;
+                *used = rparens + get_token_type_size(TOKEN_RPARENS);
                 return eval_func(tok, rparens);
             }
             break;
