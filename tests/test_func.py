@@ -44,3 +44,23 @@ def test_func_args_with_offset():
         17,
         0, 0, 0, 1, 2, 8, 9, 10,
         )
+
+
+def test_no_args():
+    assert_eval(
+        '(def @a (+ 0 5))'
+        '(@a)',
+        1,
+        5,
+    )
+
+
+def test_nested_calls():
+    assert_eval(
+        '(def @a $a (+ $a $b))'
+        '(def @b (+ (@a 1 2) (@a 3 4)))'
+        '(@b)',
+        1,
+        1,
+        1 + 2 + 3 + 4,
+    )
