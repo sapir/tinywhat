@@ -9,3 +9,7 @@ def what_eval(inp):
         tf.seek(0)
         output_str = check_output('./test', stdin=tf)
         return output_str
+
+
+def assert_eval(inp, out):
+    assert what_eval(inp + '\n') == ' -> {}\n'.format(out)
