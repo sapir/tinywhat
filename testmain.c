@@ -33,8 +33,8 @@ int main()
                 continue;
             }
 
-            if (last_token.type == TOKEN_LPARENS) ++num_parens;
-            else if (last_token.type == TOKEN_RPARENS) --num_parens;
+            if (get_token_type(&last_token) == TOKEN_LPARENS) ++num_parens;
+            else if (get_token_type(&last_token) == TOKEN_RPARENS) --num_parens;
 
             if (num_parens == 0) {
                 execute(get_scratch_buf_ptr(), get_scratch_buf_used());

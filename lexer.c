@@ -8,17 +8,44 @@
 
 struct token cur_token = { TOKEN_NULL };
 struct token last_token = { TOKEN_NULL };
+// TOKEN_KEYWORD - number of letters input so far, -1
+// TOKEN_NUMBER - number value
 int state;
 
 
+// commit cur_token to last_token, and clear cur_token so we can put a new token
+// in it
 static void starttoken(void) {
     memcpy(&last_token, &cur_token, sizeof(last_token));
-    memset(&cur_token, 0, sizeof(cur_token));
+
+    switch (get_token_type(&last_token)) {
+    case TOKEN_NUMBER:
+        // use inline token value for short numbers
+        // note that state == TOKEN_VAL_MASK is reserved for -1 so we can't
+        // use it
+        if (0 <= state && state < TOKEN_VAL_MASK) {
+            set_token(&last_token, TOKEN_SHORT_NUMBER, state);
+        } else {
+            set_token_num(&last_token, state);
+        }
+        break;
+
+    case TOKEN_VAR:
+    case TOKEN_UDF:
+        if (get_token_val(&last_token) < 0) {
+            set_token(&last_token, TOKEN_KEYWORD, KWD_BAD);
+        }
+        break;
+
+    default: break;
+    }
+
+    set_token(&cur_token, TOKEN_NULL, 0);
     state = 0;
 }
 
 static bool last_token_is_valid(void) {
-    return last_token.type != TOKEN_NULL;
+    return get_token_type(&last_token) != TOKEN_NULL;
 }
 
 bool lexer_input(char c)
@@ -29,66 +56,65 @@ bool lexer_input(char c)
     {
         starttoken();
         switch (c) {
-        case '(': cur_token.type = TOKEN_LPARENS; break;
-        case ')': cur_token.type = TOKEN_RPARENS; break;
-        case '$': cur_token.type = TOKEN_VAR; cur_token.var_index = -1; break;
-        case '@': cur_token.type = TOKEN_UDF; cur_token.udf_name = -1; break;
-        case '=': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_eq; break;
-        case '+': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_add; break;
-        case '-': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_sub; break;
-        case '*': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_mul; break;
-        case '/': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_div; break;
-        case '%': cur_token.type = TOKEN_KEYWORD; cur_token.kwd = KWD_mod; break;
-        default: cur_token.type = TOKEN_NULL; break;
+        case '(': set_token(&cur_token, TOKEN_LPARENS, 0); break;
+        case ')': set_token(&cur_token, TOKEN_RPARENS, 0); break;
+        case '$': set_token(&cur_token, TOKEN_VAR, -1); break;
+        case '@': set_token(&cur_token, TOKEN_UDF, -1); break;
+        case '=': set_token(&cur_token, TOKEN_KEYWORD, KWD_eq); break;
+        case '+': set_token(&cur_token, TOKEN_KEYWORD, KWD_add); break;
+        case '-': set_token(&cur_token, TOKEN_KEYWORD, KWD_sub); break;
+        case '*': set_token(&cur_token, TOKEN_KEYWORD, KWD_mul); break;
+        case '/': set_token(&cur_token, TOKEN_KEYWORD, KWD_div); break;
+        case '%': set_token(&cur_token, TOKEN_KEYWORD, KWD_mod); break;
+        default: set_token(&cur_token, TOKEN_NULL, 0); break;
         }
         return last_token_is_valid();
     }
 
     if (isdigit(c)) {
         bool new = false;
-        if (cur_token.type != TOKEN_NUMBER) {
+        if (get_token_type(&cur_token) != TOKEN_NUMBER) {
             starttoken();
-            cur_token.type = TOKEN_NUMBER;
+            set_token(&cur_token, TOKEN_NUMBER, 0);
             new = true;
         }
-        cur_token.num *= 10;
-        cur_token.num += (c - '0');
+        state *= 10;
+        state += (c - '0');
         return new && last_token_is_valid();
     }
 
     if (isalpha(c)) {
         c = tolower(c);
 
-        if (cur_token.type == TOKEN_VAR) {
-            if (cur_token.var_index < 0) {
+        if (get_token_type(&cur_token) == TOKEN_VAR) {
+            if (get_token_val(&cur_token) < 0) {
                 int index = var_name_to_index(c);
                 if (index < 0) {
                     printf("bad variable name\n");
                     // invalidate this token
-                    cur_token.type = TOKEN_KEYWORD;
-                    cur_token.kwd = KWD_BAD;
+                    set_token(&cur_token, TOKEN_KEYWORD, KWD_BAD);
                 } else {
-                    cur_token.var_index = index;
+                    set_token_val(&cur_token, index);
                 }
             }
             return false;
         }
 
-        if (cur_token.type == TOKEN_UDF) {
-            if (cur_token.udf_name < 0) {
-                cur_token.udf_name = c;
+        if (get_token_type(&cur_token) == TOKEN_UDF) {
+            if (get_token_val(&cur_token) < 0) {
+                set_token_val(&cur_token, from_udf_name(c));
             }
             return false;
         }
 
         // not part of a var or udf, must be a keyword
 
-        if (cur_token.type == TOKEN_KEYWORD) {
+        if (get_token_type(&cur_token) == TOKEN_KEYWORD) {
             // some keywords can't be determined by their first letter. second
             // letter modifies the default.
             if (state == 0) {
-                if (cur_token.kwd == KWD_if && c == 'o') {
-                    cur_token.kwd = KWD_io;
+                if (get_token_val(&cur_token) == KWD_if && c == 'o') {
+                    set_token_val(&cur_token, KWD_io);
                 }
             }
 
@@ -97,18 +123,17 @@ bool lexer_input(char c)
         }
 
         starttoken();
-        cur_token.type = TOKEN_KEYWORD;
         switch (c) {
-        case 'c': cur_token.kwd = KWD_cfgio; break;
-        case 'd': cur_token.kwd = KWD_def; break;
-        case 'f': cur_token.kwd = KWD_for; break;
-        case 'i': cur_token.kwd = KWD_if; break;
-        // case 'i': cur_token.kwd = KWD_io; break;
-        case 'p': cur_token.kwd = KWD_pwm; break;
-        case 's': cur_token.kwd = KWD_set; break;
-        case 'u': cur_token.kwd = KWD_undef; break;
-        case 'w': cur_token.kwd = KWD_wait; break;
-        default: cur_token.kwd = KWD_BAD; break;
+        case 'c': set_token(&cur_token, TOKEN_KEYWORD, KWD_cfgio); break;
+        case 'd': set_token(&cur_token, TOKEN_KEYWORD, KWD_def); break;
+        case 'f': set_token(&cur_token, TOKEN_KEYWORD, KWD_for); break;
+        case 'i': set_token(&cur_token, TOKEN_KEYWORD, KWD_if); break;
+        // case 'i': set_token(&cur_token, TOKEN_KEYWORD, KWD_io); break;
+        case 'p': set_token(&cur_token, TOKEN_KEYWORD, KWD_pwm); break;
+        case 's': set_token(&cur_token, TOKEN_KEYWORD, KWD_set); break;
+        case 'u': set_token(&cur_token, TOKEN_KEYWORD, KWD_undef); break;
+        case 'w': set_token(&cur_token, TOKEN_KEYWORD, KWD_wait); break;
+        default: set_token(&cur_token, TOKEN_KEYWORD, KWD_BAD); break;
         }
         return last_token_is_valid();
     }

@@ -18,8 +18,8 @@ static size_t find_rparens(struct token *tok, size_t size)
     struct token *end = get_buf_end(tok, size);
     struct token *next = get_next_token(tok);
     while (next <= end) {
-        if (tok->type == TOKEN_LPARENS) ++num_parens;
-        else if (tok->type == TOKEN_RPARENS) --num_parens;
+        if (get_token_type(tok) == TOKEN_LPARENS) ++num_parens;
+        else if (get_token_type(tok) == TOKEN_RPARENS) --num_parens;
 
         if (num_parens == 0) return (char*)tok - (char*)start;
 
@@ -32,7 +32,7 @@ static size_t find_rparens(struct token *tok, size_t size)
 
 static size_t get_arg_size(struct token *tok, size_t size)
 {
-    switch (tok->type) {
+    switch (get_token_type(tok)) {
     case TOKEN_VAR:
     case TOKEN_UDF:
     case TOKEN_NUMBER:
@@ -46,7 +46,7 @@ static size_t get_arg_size(struct token *tok, size_t size)
     }
 }
 
-#define more_args(tok, size) (size > 0 && tok->type != TOKEN_RPARENS)
+#define more_args(tok, size) (size > 0 && get_token_type(tok) != TOKEN_RPARENS)
 
 #define skip_arg(tok, size, used) \
     do { \
@@ -98,12 +98,12 @@ static int func_cfgio(struct token *tok, size_t size)
 
 static int func_def(struct token *tok, size_t size)
 {
-    if (tok->type != TOKEN_UDF) {
+    if (get_token_type(tok) != TOKEN_UDF) {
         printf("syntax error\n");
         return 0;
     }
 
-    char name = tok->udf_name;
+    char name = to_udf_name(get_token_val(tok));
     skip_arg(tok, size, get_token_type_size(TOKEN_UDF));
 
     // strip off useless rparens, don't bother saving it
@@ -159,12 +159,12 @@ static int func_eq(struct token *tok, size_t size)
 
 static int func_for(struct token *tok, size_t size)
 {
-    if (tok->type != TOKEN_VAR) {
+    if (get_token_type(tok) != TOKEN_VAR) {
         printf("syntax error\n");
         return 0;
     }
 
-    int var = tok->var_index;
+    int var = get_token_val(tok);
     skip_arg(tok, size, get_token_type_size(TOKEN_VAR));
 
     int start;
@@ -216,12 +216,12 @@ static int func_io(struct token *tok, size_t size)
 
 static int func_set(struct token *tok, size_t size)
 {
-    if (tok->type != TOKEN_VAR) {
+    if (get_token_type(tok) != TOKEN_VAR) {
         printf("syntax error\n");
         return 0;
     }
 
-    int var = tok->var_index;
+    int var = get_token_val(tok);
     size -= get_token_size(tok);
     tok = get_next_token(tok);
     if (!more_args(tok, size)) {
@@ -289,12 +289,12 @@ static int func_sub(struct token *tok, size_t size)
 
 static int func_undef(struct token *tok, size_t size)
 {
-    if (tok->type != TOKEN_UDF) {
+    if (get_token_type(tok) != TOKEN_UDF) {
         printf("syntax error\n");
         return 0;
     }
 
-    char name = tok->udf_name;
+    char name = to_udf_name(get_token_val(tok));
     struct saved_func *sf = lookup_func(name);
     if (sf) {
         remove_func(sf);
@@ -321,8 +321,8 @@ static int eval_udf_call(char name, struct token *tok, size_t size)
     if (!more_args(sf_tok, sf_size))
         return 0;
 
-    if (sf_tok->type == TOKEN_VAR) {
-        int i = sf_tok->var_index;
+    if (get_token_type(sf_tok) == TOKEN_VAR) {
+        int i = get_token_val(sf_tok);
         skip_arg(sf_tok, sf_size, get_token_type_size(TOKEN_VAR));
 
         // set arguments starting at start_var
@@ -345,10 +345,10 @@ static int eval_func(struct token *tok, size_t size)
     // reach here, and parens must cancel out, so there must be at least 2
     // tokens
 
-    switch (tok->type) {
+    switch (get_token_type(tok)) {
     case TOKEN_KEYWORD:
         {
-            char kwd = tok->kwd;
+            enum keyword kwd = get_token_val(tok);
             size -= get_token_size(tok);
             tok = get_next_token(tok);
             switch (kwd) {
@@ -373,7 +373,7 @@ static int eval_func(struct token *tok, size_t size)
 
     case TOKEN_UDF:
         {
-            char name = tok->udf_name;
+            char name = to_udf_name(get_token_val(tok));
             size -= get_token_size(tok);
             tok = get_next_token(tok);
             return eval_udf_call(name, tok, size);
@@ -386,14 +386,18 @@ static int eval_func(struct token *tok, size_t size)
 
 int eval(struct token *tok, size_t size, size_t *used)
 {
-    switch (tok->type) {
+    switch (get_token_type(tok)) {
     case TOKEN_VAR:
         *used = get_token_size(tok);
-        return vars[tok->var_index];
+        return vars[get_token_val(tok)];
+
+    case TOKEN_SHORT_NUMBER:
+        *used = get_token_size(tok);
+        return get_token_val(tok);
 
     case TOKEN_NUMBER:
         *used = get_token_size(tok);
-        return tok->num;
+        return get_token_num_val(tok);
 
     case TOKEN_LPARENS:
         {
