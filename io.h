@@ -2,7 +2,7 @@
 #define IO_H
 
 
-int cfg_pin(int pin, int input, int pullup);
+int cfg_pin(int pin, int output, int val);
 int set_pin(int pin, int val);
 int get_pin(int pin);
 int pwm(int duty, int length);

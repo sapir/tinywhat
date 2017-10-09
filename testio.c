@@ -2,19 +2,27 @@
 #include "io.h"
 
 
-int cfg_pin(int pin, int input, int pullup)
+int cfg_pin(int pin, int output, int val)
 {
-    return 0;
+    if (output)
+        fprintf(stderr, "cfg p%d, output, %d\n", pin, val);
+    else
+        fprintf(stderr, "cfg p%d, input, %s\n",
+            pin, val ? "pullup" : "no pullup");
+
+    return 1;
 }
 
 int set_pin(int pin, int val)
 {
-    return 0;
+    fprintf(stderr, "set p%d -> %d\n", pin, val);
+    return val;
 }
 
 int get_pin(int pin)
 {
-    return 0;
+    fprintf(stderr, "get p%d <- 0\n", pin);
+    return pin;
 }
 
 int pwm(int duty, int length)

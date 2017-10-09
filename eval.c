@@ -2,6 +2,7 @@
 #include "lexer.h"
 #include "vars.h"
 #include "progbuf.h"
+#include "io.h"
 #include "eval.h"
 
 
@@ -92,8 +93,21 @@ static int func_add(struct token *tok, size_t size)
 
 static int func_cfgio(struct token *tok, size_t size)
 {
-    printf("cfgio\n");
-    return 0;
+    int pin, input, value;
+
+    if (!more_args(tok, size)) return 0;
+    set_next_arg(pin, tok, size);
+
+    if (!more_args(tok, size)) return 0;
+    set_next_arg(input, tok, size);
+
+    if (more_args(tok, size))
+        set_next_arg(value, tok, size);
+    else
+        // default to 1 (pullup) for input, 0 (low) for output
+        value = input;
+
+    return cfg_pin(pin, input, value);
 }
 
 static int func_def(struct token *tok, size_t size)
@@ -210,8 +224,17 @@ static int func_if(struct token *tok, size_t size)
 
 static int func_io(struct token *tok, size_t size)
 {
-    printf("io\n");
-    return 0;
+    int pin, value;
+
+    if (!more_args(tok, size)) return 0;
+    set_next_arg(pin, tok, size);
+
+    if (more_args(tok, size)) {
+        set_next_arg(value, tok, size);
+        return set_pin(pin, value);
+    } else {
+        return get_pin(pin);
+    }
 }
 
 static int func_set(struct token *tok, size_t size)
