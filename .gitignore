@@ -1,3 +1,4 @@
+# c build outputs
 *.o
 *.bin
 *.hex
@@ -6,5 +7,9 @@ build_at
 build_test
 test
 
+# python outputs
 *.pyc
 __pycache__
+
+# markdown outputs
+*.html
