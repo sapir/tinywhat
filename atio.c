@@ -49,19 +49,62 @@ static const struct pin_def pin_defs[] = {
     }
 
 
+#define set_port_bit(base_name, port_num, bit, val) \
+    do { \
+        if (port_num == 1) { \
+            set_bit_val(base_name ## A, bit, val); \
+        } else { \
+            set_bit_val(base_name ## B, bit, val); \
+        } \
+    } while (0)
+
+
 int cfg_pin(int pin, int output, int val)
 {
-    if (pin <= 0 || pin > NUM_GPIO_PINS)
-        return 0;
+    // big switch-case so array access gets inlined, and binary is a few
+    // hundred bytes smaller
+    switch (pin) {
+    case 1:
+        set_port_bit(DDR, pin_defs[0].port, pin_defs[0].bit_num, output);
+        set_port_bit(PORT, pin_defs[0].port, pin_defs[0].bit_num, val);
+        break;
 
-    --pin;
-    int bit_num = pin_defs[pin].bit_num;
-    if (pin_defs[pin].port == 1) {
-        set_bit_val(DDRA, bit_num, output);
-        set_bit_val(PORTA, bit_num, val);
-    } else {
-        set_bit_val(DDRB, bit_num, output);
-        set_bit_val(PORTB, bit_num, val);
+    case 2:
+        set_port_bit(DDR, pin_defs[1].port, pin_defs[1].bit_num, output);
+        set_port_bit(PORT, pin_defs[1].port, pin_defs[1].bit_num, val);
+        break;
+
+    case 3:
+        set_port_bit(DDR, pin_defs[2].port, pin_defs[2].bit_num, output);
+        set_port_bit(PORT, pin_defs[2].port, pin_defs[2].bit_num, val);
+        break;
+
+    case 4:
+        set_port_bit(DDR, pin_defs[3].port, pin_defs[3].bit_num, output);
+        set_port_bit(PORT, pin_defs[3].port, pin_defs[3].bit_num, val);
+        break;
+
+    case 5:
+        set_port_bit(DDR, pin_defs[4].port, pin_defs[4].bit_num, output);
+        set_port_bit(PORT, pin_defs[4].port, pin_defs[4].bit_num, val);
+        break;
+
+    case 6:
+        set_port_bit(DDR, pin_defs[5].port, pin_defs[5].bit_num, output);
+        set_port_bit(PORT, pin_defs[5].port, pin_defs[5].bit_num, val);
+        break;
+
+    case 7:
+        set_port_bit(DDR, pin_defs[6].port, pin_defs[6].bit_num, output);
+        set_port_bit(PORT, pin_defs[6].port, pin_defs[6].bit_num, val);
+        break;
+
+    case 8:
+        set_port_bit(DDR, pin_defs[7].port, pin_defs[7].bit_num, output);
+        set_port_bit(PORT, pin_defs[7].port, pin_defs[7].bit_num, val);
+        break;
+
+    default: return 0;
     }
 
     return 1;
