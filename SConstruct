@@ -18,15 +18,15 @@ env.Append(CCFLAGS='-Wall -Os -g -flto -mmcu=${MCU} -DF_CPU=${F_CPU} -std=c11')
 env.Append(LINKFLAGS='-w -Os -g -flto -fuse-linker-plugin -Wl,--gc-sections -mmcu=${MCU}')
 
 env.Program(
-    'attiny44.bin',
+    '${MCU}.bin',
     source=['atmain.c', 'atio.c'] + srcs,
     srcdir='build_at',
 )
 
 env.Command(
     action='${OBJCOPY} -O ihex -R .eeprom ${SOURCES} ${TARGETS}',
-    source='attiny44.bin',
-    target='attiny44.hex',
+    source='${MCU}.bin',
+    target='${MCU}.hex',
 )
 
 
