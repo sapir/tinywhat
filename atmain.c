@@ -1,8 +1,11 @@
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
+#include "uart.h"
 
 
 int main() {
+    uart_setup();
+
     sei();
 
     for(;;) {
