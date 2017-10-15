@@ -22,16 +22,15 @@ static const struct pin_def pin_defs[] = {
 };
 
 
-static inline void _set_bit_val(uint16_t sfr_addr, int bit, int val)
-{
-    if (val)
-        _SFR_BYTE(sfr_addr) |= _BV(bit);
-    else
-        _SFR_BYTE(sfr_addr) &= ~_BV(bit);
-}
-
+// a macro to ensure this gets compiled to a single instruction when
+// values are constant
 #define set_bit_val(sfr, bit, val) \
-    _set_bit_val(_SFR_MEM_ADDR(sfr), bit, val)
+    do { \
+        if (val) \
+            (sfr) |= _BV(bit); \
+        else \
+            (sfr) &= ~_BV(bit); \
+    } while (0)
 
 
 int cfg_pin(int pin, int output, int val)
