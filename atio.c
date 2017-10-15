@@ -24,13 +24,29 @@ static const struct pin_def pin_defs[] = {
 
 // a macro to ensure this gets compiled to a single instruction when
 // values are constant
-#define set_bit_val(sfr, bit, val) \
+#define _set_bit_val(sfr, bit, val) \
     do { \
         if (val) \
             (sfr) |= _BV(bit); \
         else \
             (sfr) &= ~_BV(bit); \
     } while (0)
+
+
+// use a big switch case to ensure I/O is performed in a single instruction
+// as long as sfr is constant
+#define set_bit_val(sfr, bit, val) \
+    switch (bit) { \
+    case 0: _set_bit_val(sfr, 0, val); break; \
+    case 1: _set_bit_val(sfr, 1, val); break; \
+    case 2: _set_bit_val(sfr, 2, val); break; \
+    case 3: _set_bit_val(sfr, 3, val); break; \
+    case 4: _set_bit_val(sfr, 4, val); break; \
+    case 5: _set_bit_val(sfr, 5, val); break; \
+    case 6: _set_bit_val(sfr, 6, val); break; \
+    case 7: \
+    default: _set_bit_val(sfr, 7, val); break; \
+    }
 
 
 int cfg_pin(int pin, int output, int val)
