@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <avr/io.h>
 #include "io.h"
@@ -10,6 +11,8 @@ struct pin_def {
 
 
 #if defined (__AVR_ATtiny44A__) || defined (__AVR_ATtiny84A__)
+
+#define __ATtinyx4A__
 
 #define NUM_GPIO_PINS 8
 
@@ -25,6 +28,8 @@ static const struct pin_def pin_defs[] = {
 };
 
 #elif defined (__AVR_ATtiny45__) || defined (__AVR_ATtiny85__)
+
+#define __ATtinyx5__
 
 #define NUM_GPIO_PINS 2
 
@@ -154,6 +159,13 @@ int get_pin(int pin)
         return 0;
 
     --pin;
+
+#ifdef __ATtinyx5__
+    // give compiler a hint that PINA isn't really in use, so PINA code can be
+    // optimized out
+    assert(pin_defs[pin].port == 2);
+#endif
+
     int bit_num = pin_defs[pin].bit_num;
     if (pin_defs[pin].port == 1) {
         return bit_is_set(PINA, bit_num);
