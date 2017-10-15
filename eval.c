@@ -6,6 +6,9 @@
 #include "eval.h"
 
 
+enum eval_error g_eval_error;
+
+
 static struct token *get_buf_end(struct token *tok, size_t size)
 {
     return (struct token*)((void*)tok + size);
@@ -59,7 +62,7 @@ static size_t get_arg_size(struct token *tok, size_t size)
     do { \
         size_t __used; \
         val = eval(tok, size, &__used); \
-        if (!__used) { printf("syntax error\n"); return 0; } \
+        if (!__used) { g_eval_error = ERROR_SYNTAX; return 0; } \
         skip_arg(tok, size, __used); \
     } while(0)
 
@@ -113,7 +116,7 @@ static int func_cfgio(struct token *tok, size_t size)
 static int func_def(struct token *tok, size_t size)
 {
     if (get_token_type(tok) != TOKEN_UDF) {
-        printf("syntax error\n");
+        g_eval_error = ERROR_SYNTAX;
         return 0;
     }
 
@@ -124,12 +127,12 @@ static int func_def(struct token *tok, size_t size)
     size -= get_token_type_size(TOKEN_RPARENS);
 
     if (!is_in_scratch(tok)) {
-        printf("can't call (def) from a stored function\n");
+        g_eval_error = ERROR_CANT_DEF_IN_UDF;
         return 0;
     }
 
     if (!save_func_from_scratch(name, tok, size)) {
-        printf("oom\n");
+        g_eval_error = ERROR_OOM;
         return 0;
     }
 
@@ -146,7 +149,7 @@ static int func_div(struct token *tok, size_t size)
     int val;
     foreach_args(val, tok, size) {
         if (!val) {
-            printf("division by zero\n");
+            g_eval_error = ERROR_DIV_BY_ZERO;
             return 0;
         }
 
@@ -174,7 +177,7 @@ static int func_eq(struct token *tok, size_t size)
 static int func_for(struct token *tok, size_t size)
 {
     if (get_token_type(tok) != TOKEN_VAR) {
-        printf("syntax error\n");
+        g_eval_error = ERROR_SYNTAX;
         return 0;
     }
 
@@ -183,14 +186,14 @@ static int func_for(struct token *tok, size_t size)
 
     int start;
     if (!more_args(tok, size)) {
-        printf("syntax error\n");
+        g_eval_error = ERROR_SYNTAX;
         return 0;
     }
     set_next_arg(start, tok, size);
 
     int end;
     if (!more_args(tok, size)) {
-        printf("syntax error\n");
+        g_eval_error = ERROR_SYNTAX;
         return 0;
     }
     set_next_arg(end, tok, size);
@@ -240,7 +243,7 @@ static int func_io(struct token *tok, size_t size)
 static int func_set(struct token *tok, size_t size)
 {
     if (get_token_type(tok) != TOKEN_VAR) {
-        printf("syntax error\n");
+        g_eval_error = ERROR_SYNTAX;
         return 0;
     }
 
@@ -248,7 +251,7 @@ static int func_set(struct token *tok, size_t size)
     size -= get_token_size(tok);
     tok = get_next_token(tok);
     if (!more_args(tok, size)) {
-        printf("syntax error\n");
+        g_eval_error = ERROR_SYNTAX;
         return 0;
     }
 
@@ -268,7 +271,7 @@ static int func_mod(struct token *tok, size_t size)
     int val;
     foreach_args(val, tok, size) {
         if (!val) {
-            printf("division by zero\n");
+            g_eval_error = ERROR_DIV_BY_ZERO;
             return 0;
         }
 
@@ -313,7 +316,7 @@ static int func_sub(struct token *tok, size_t size)
 static int func_undef(struct token *tok, size_t size)
 {
     if (get_token_type(tok) != TOKEN_UDF) {
-        printf("syntax error\n");
+        g_eval_error = ERROR_SYNTAX;
         return 0;
     }
 
@@ -406,7 +409,7 @@ static int eval_func(struct token *tok, size_t size)
     default: break;
     }
 
-    printf("syntax error\n");
+    g_eval_error = ERROR_SYNTAX;
     return 0;
 }
 
@@ -438,7 +441,7 @@ int eval(struct token *tok, size_t size, size_t *used)
     default: break;
     }
 
-    printf("syntax error\n");
+    g_eval_error = ERROR_SYNTAX;
     *used = 0;
     return 0;
 }
