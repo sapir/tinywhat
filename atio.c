@@ -51,7 +51,7 @@ static const struct pin_def pin_defs[] = {
 
 int cfg_pin(int pin, int output, int val)
 {
-    if (pin <= 0 || pin >= NUM_GPIO_PINS)
+    if (pin <= 0 || pin > NUM_GPIO_PINS)
         return 0;
 
     --pin;
@@ -74,7 +74,7 @@ int set_pin(int pin, int val)
 
 int get_pin(int pin)
 {
-    if (pin <= 0 || pin >= NUM_GPIO_PINS)
+    if (pin <= 0 || pin > NUM_GPIO_PINS)
         return 0;
 
     --pin;
