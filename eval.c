@@ -294,7 +294,7 @@ static int func_mul(struct token *tok, size_t size)
 
 static int func_pwm(struct token *tok, size_t size)
 {
-    printf("pwm\n");
+    // TODO
     return 0;
 }
 
@@ -332,7 +332,7 @@ static int func_undef(struct token *tok, size_t size)
 
 static int func_wait(struct token *tok, size_t size)
 {
-    printf("wait\n");
+    // TODO
     return 0;
 }
 
