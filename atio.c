@@ -8,6 +8,9 @@ struct pin_def {
     int bit_num;
 };
 
+
+#if defined (__AVR_ATtiny44A__) || defined (__AVR_ATtiny84A__)
+
 #define NUM_GPIO_PINS 8
 
 static const struct pin_def pin_defs[] = {
@@ -20,6 +23,17 @@ static const struct pin_def pin_defs[] = {
     { 1, 3 },
     { 1, 2 },
 };
+
+#elif defined (__AVR_ATtiny45__) || defined (__AVR_ATtiny85__)
+
+#define NUM_GPIO_PINS 2
+
+static const struct pin_def pin_defs[] = {
+    { 2, 1 },
+    { 2, 2 },
+};
+
+#endif
 
 
 // a macro to ensure this gets compiled to a single instruction when
@@ -74,6 +88,7 @@ int cfg_pin(int pin, int output, int val)
         set_port_bit(PORT, pin_defs[1].port, pin_defs[1].bit_num, val);
         break;
 
+#if NUM_GPIO_PINS > 2
     case 3:
         set_port_bit(DDR, pin_defs[2].port, pin_defs[2].bit_num, output);
         set_port_bit(PORT, pin_defs[2].port, pin_defs[2].bit_num, val);
@@ -103,6 +118,7 @@ int cfg_pin(int pin, int output, int val)
         set_port_bit(DDR, pin_defs[7].port, pin_defs[7].bit_num, output);
         set_port_bit(PORT, pin_defs[7].port, pin_defs[7].bit_num, val);
         break;
+#endif
 
     default: return 0;
     }
