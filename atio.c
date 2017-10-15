@@ -36,6 +36,23 @@ static const struct pin_def pin_defs[] = {
 #endif
 
 
+// On ATtinyx5, there is no I/O port A. These macros allow code using it to
+// compile, as long as the code is optimized out at link time. Otherwise, a
+// link error occurs for the missing function implementations.
+#ifndef DDRA
+
+volatile uint8_t *_attempt_to_use_nonexistent_DDRA(void);
+#define DDRA (*_attempt_to_use_nonexistent_DDRA())
+
+volatile uint8_t *_attempt_to_use_nonexistent_PINA(void);
+#define PINA (*_attempt_to_use_nonexistent_PINA())
+
+volatile uint8_t *_attempt_to_use_nonexistent_PORTA(void);
+#define PORTA (*_attempt_to_use_nonexistent_PORTA())
+
+#endif
+
+
 // a macro to ensure this gets compiled to a single instruction when
 // values are constant
 #define _set_bit_val(sfr, bit, val) \
