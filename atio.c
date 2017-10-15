@@ -69,18 +69,7 @@ int cfg_pin(int pin, int output, int val)
 
 int set_pin(int pin, int val)
 {
-    if (pin <= 0 || pin >= NUM_GPIO_PINS)
-        return 0;
-
-    --pin;
-    int bit_num = pin_defs[pin].bit_num;
-    if (pin_defs[pin].port == 1) {
-        set_bit_val(PORTA, bit_num, val);
-    } else {
-        set_bit_val(PORTB, bit_num, val);
-    }
-
-    return val;
+    return cfg_pin(pin, 1, val);
 }
 
 int get_pin(int pin)
