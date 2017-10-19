@@ -40,7 +40,7 @@ void output(char x) {
 ISR(USI_OVF_vect) {
     // done with this byte, disable USI
     USICR = 0;
-    // save data
+    // save data before it goes away
     int temp = USIDR;
     // pass it on
     output(reverse_byte(temp));
