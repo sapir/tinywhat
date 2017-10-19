@@ -8,6 +8,8 @@ int main() {
 
     sei();
 
+    uart_puts("tinywhat v1.0\r\n\r\n");
+
     for(;;) {
         set_sleep_mode(SLEEP_MODE_IDLE);
         sleep_mode();
