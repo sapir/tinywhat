@@ -12,6 +12,9 @@
 #define CYCLES_PER_BIT (F_CPU / UART_BAUD)
 
 
+char rx_buf;
+
+
 ISR(PCINT0_vect) {
     // check for pin low
     if (!(PINB & _BV(PINA6))) {
@@ -47,8 +50,8 @@ ISR(USI_OVF_vect) {
     USICR = 0;
     // save data before it goes away
     int temp = USIDR;
-    // pass it on
-    output(reverse_byte(temp));
+
+    rx_buf = reverse_byte(temp);
 
     // re-enable pcint
     GIFR = _BV(PCIF0);
@@ -57,8 +60,9 @@ ISR(USI_OVF_vect) {
 
 char uart_getc(void)
 {
-    // TODO
-    return 0;
+    char c = rx_buf;
+    rx_buf = '\0';
+    return c;
 }
 
 void uart_putc(char c)
