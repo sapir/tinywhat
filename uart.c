@@ -1,10 +1,15 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
+#include "atio.h"
 #include "uart.h"
 
 
 // receive code based on 'www.technoblogy.com/show?VSX'
 // assumes 8MHz clock rate and a calibrated timer
+
+#define UART_BAUD 9600
+#define CYCLES_PER_BIT (F_CPU / UART_BAUD)
 
 
 ISR(PCINT0_vect) {
@@ -58,7 +63,24 @@ char uart_getc(void)
 
 void uart_putc(char c)
 {
-    // TODO
+    // start bit
+    PORTB &= ~_BV(PORTB2);
+    __builtin_avr_delay_cycles(CYCLES_PER_BIT);
+
+    // write bits, lsb first
+    for (int i = 0; i < 8; ++i) {
+        _set_bit_val(PORTB, PORTB2, c & 1);
+        c >>= 1;
+
+        __builtin_avr_delay_cycles(CYCLES_PER_BIT);
+    }
+
+    // stop bit
+    PORTB &= ~_BV(PORTB2);
+    __builtin_avr_delay_cycles(CYCLES_PER_BIT);
+
+    // complete by setting tx to high again
+    PORTB |= _BV(PORTB2);
 }
 
 void uart_setup(void)
@@ -72,4 +94,8 @@ void uart_setup(void)
     // setup rx pin change interrupt
     GIMSK |= _BV(PCIE0);
     PCMSK0 |= _BV(PCINT6);
+
+    // setup tx. set to high before enabling output.
+    PORTB |= _BV(PORTB2);
+    DDRB |= _BV(DDB2);
 }
