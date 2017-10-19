@@ -92,6 +92,25 @@ void uart_puts(const char *s)
     }
 }
 
+void uart_putnum(int n)
+{
+    if (!n) {
+        uart_putc('0');
+        return;
+    }
+
+    if (n < 0) {
+        uart_putc('-');
+        n = -n;
+    }
+
+    while (n) {
+        uint8_t digit = n % 10;
+        uart_putc(digit + '0');
+        n /= 10;
+    }
+}
+
 void uart_setup(void)
 {
     // configure input on rx (PA6)
