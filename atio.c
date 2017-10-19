@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <avr/io.h>
-#include "io.h"
+#include "atio.h"
 
 
 struct pin_def {
@@ -20,17 +20,6 @@ static const struct pin_def pin_defs[] = {
     { 1, 1 },
     { 1, 0 },
 };
-
-
-// a macro to ensure this gets compiled to a single instruction when
-// values are constant
-#define _set_bit_val(sfr, bit, val) \
-    do { \
-        if (val) \
-            (sfr) |= _BV(bit); \
-        else \
-            (sfr) &= ~_BV(bit); \
-    } while (0)
 
 
 // use a big switch case to ensure I/O is performed in a single instruction
