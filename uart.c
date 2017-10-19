@@ -3,7 +3,7 @@
 #include "uart.h"
 
 
-// receive code based on 'www.technoblogy.com/show?RPY'
+// receive code based on 'www.technoblogy.com/show?VSX'
 // assumes 8MHz clock rate and a calibrated timer
 
 
@@ -16,29 +16,15 @@ ISR(PCINT0_vect) {
         // set CTC mode, clk_io/8 prescaler, and timer counts
         TCCR0A = 0<<COM0A0 | 0<<COM0B0 | 2<<WGM00;
         TCCR0B = 0<<WGM02 | 2<<CS00;
-        TCNT0 = 0;
-        OCR0A = 51;
+        OCR0A = 103;
+        TCNT0 = 206;
 
-        // clear output compare flag
-        TIFR0 |= _BV(OCF0A);
-        // enable output compare interrupt
-        TIMSK0 |= _BV(OCIE0A);
+        // enable USI interrupt, 2-wire USI mode, with timer 0 compare match as
+        // clock source
+        USICR = 1<<USIOIE | 0<<USIWM0 | 1<<USICS0;
+        // clear overflow interupt flag, set counter value to 8
+        USISR = 1<<USIOIF | 8<<USICNT0;
     }
-}
-
-ISR(TIM0_COMPA_vect) {
-    // disable interrupt
-    TIMSK0 &= ~_BV(OCIE0A);
-
-    // set new counts for USI
-    TCNT0 = 0;
-    OCR0A = 103;
-
-    // enable USI interrupt, 2-wire USI mode, with timer 0 compare match as
-    // clock source
-    USICR = 1<<USIOIE | 0<<USIWM0 | 1<<USICS0;
-    // clear overflow interupt flag, set counter value to 8
-    USISR = 1<<USIOIF | 8<<USICNT0;
 }
 
 static inline char reverse_byte(char x) {
