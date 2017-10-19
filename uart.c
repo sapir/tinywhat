@@ -83,6 +83,15 @@ void uart_putc(char c)
     PORTB |= _BV(PORTB2);
 }
 
+void uart_puts(const char *s)
+{
+    for (;;) {
+        char c = *s++;
+        if (!c) break;
+        uart_putc(c);
+    }
+}
+
 void uart_setup(void)
 {
     // configure input on rx (PA6)
