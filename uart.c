@@ -8,23 +8,37 @@
 
 
 ISR(PCINT0_vect) {
-    if (!(PINB & _BV(PINB0))) {
-        GIMSK &= ~_BV(PCIE);
-        TCCR0A = 2<<WGM00;
+    // check for pin low
+    if (!(PINB & _BV(PINA6))) {
+        // disable interrupt
+        GIMSK &= ~_BV(PCIE0);
+
+        // set CTC mode, clk_io/8 prescaler, and timer counts
+        TCCR0A = 0<<COM0A0 | 0<<COM0B0 | 2<<WGM00;
         TCCR0B = 0<<WGM02 | 2<<CS00;
         TCNT0 = 0;
         OCR0A = 51;
-        TIFR |= _BV(OCF0A);
-        TIMSK |= _BV(OCIE0A);
+
+        // clear output compare flag
+        TIFR0 |= _BV(OCF0A);
+        // enable output compare interrupt
+        TIMSK0 |= _BV(OCIE0A);
     }
 }
 
-ISR(TIMER0_COMPA_vect) {
-    TIMSK &= ~_BV(OCIE0A);
+ISR(TIM0_COMPA_vect) {
+    // disable interrupt
+    TIMSK0 &= ~_BV(OCIE0A);
+
+    // set new counts for USI
     TCNT0 = 0;
     OCR0A = 103;
+
+    // enable USI interrupt, 2-wire USI mode, with timer 0 compare match as
+    // clock source
     USICR = 1<<USIOIE | 0<<USIWM0 | 1<<USICS0;
-    USISR = 1<<USIOIF | 8;
+    // clear overflow interupt flag, set counter value to 8
+    USISR = 1<<USIOIF | 8<<USICNT0;
 }
 
 static inline char reverse_byte(char x) {
@@ -38,11 +52,16 @@ void output(char x) {
 }
 
 ISR(USI_OVF_vect) {
+    // done with this byte, disable USI
     USICR = 0;
+    // save data
     int temp = USIDR;
+    // pass it on
     output(reverse_byte(temp));
-    GIFR = _BV(PCIF);
-    GIMSK |= _BV(PCIE);
+
+    // re-enable pcint
+    GIFR = _BV(PCIF0);
+    GIMSK |= _BV(PCIE0);
 }
 
 char uart_getc(void)
@@ -58,9 +77,13 @@ void uart_putc(char c)
 
 void uart_setup(void)
 {
-    DDRB &= ~_BV(0);
+    // configure input on rx (PA6)
+    DDRA &= ~_BV(DDA6);
+    // disable usi
     USICR = 0;
-    GIFR = _BV(PCIF);
-    GIMSK |= _BV(PCIE);
-    PCMSK |= _BV(PCINT0);
+    // clear rx pin interrupt flag
+    GIFR = _BV(PCIF0);
+    // setup rx pin change interrupt
+    GIMSK |= _BV(PCIE0);
+    PCMSK0 |= _BV(PCINT6);
 }
