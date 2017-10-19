@@ -19,12 +19,19 @@ static void execute(char *buf, size_t size)
     uart_puts("\r\n");
 }
 
-void __attribute__((noreturn)) repl_loop(void)
+static void __attribute__((noreturn)) repl_loop(void)
 {
     int num_parens = 0;
 
     for(;;) {
         char c = uart_getc();
+        if (c == '\x03') {
+            uart_puts("clearing scratch buf\r\n");
+            clear_scratch();
+            num_parens = 0;
+            continue;
+        }
+
         if (c) {
             uart_putc(c);
 
