@@ -83,15 +83,32 @@ static int exec_block(struct token *tok, size_t size)
 }
 
 
-static int func_add(struct token *tok, size_t size)
+static int reduce(struct token *tok, size_t size, bool use_start, int start,
+                    int (*func)(int a, int b))
 {
-    int res = 0;
+    int res;
+    if (use_start) {
+        res = start;
+    } else {
+        if (!more_args(tok, size)) return 0;
+        set_next_arg(res, tok, size);
+    }
+
     int val;
     foreach_args(val, tok, size) {
-        res += val;
+        res = func(res, val);
+
+        if (g_eval_error) return res;
     } end_foreach_args();
 
     return res;
+}
+
+static int _add(int a, int b) { return a + b; }
+
+static int func_add(struct token *tok, size_t size)
+{
+    return reduce(tok, size, true, 0, _add);
 }
 
 static int func_cfgio(struct token *tok, size_t size)
@@ -139,24 +156,18 @@ static int func_def(struct token *tok, size_t size)
     return 1;
 }
 
+static int _div(int a, int b) {
+    if (!b) {
+        g_eval_error = ERROR_DIV_BY_ZERO;
+        return 0;
+    }
+
+    return a / b;
+}
+
 static int func_div(struct token *tok, size_t size)
 {
-    if (!more_args(tok, size)) return 0;
-
-    int res;
-    set_next_arg(res, tok, size);
-
-    int val;
-    foreach_args(val, tok, size) {
-        if (!val) {
-            g_eval_error = ERROR_DIV_BY_ZERO;
-            return 0;
-        }
-
-        res /= val;
-    } end_foreach_args();
-
-    return res;
+    return reduce(tok, size, false, 0, _div);
 }
 
 static int func_eq(struct token *tok, size_t size)
@@ -261,35 +272,25 @@ static int func_set(struct token *tok, size_t size)
     return val;
 }
 
+static int _mod(int a, int b) {
+    if (!b) {
+        g_eval_error = ERROR_DIV_BY_ZERO;
+        return 0;
+    }
+
+    return a % b;
+}
+
 static int func_mod(struct token *tok, size_t size)
 {
-    if (!more_args(tok, size)) return 0;
-
-    int res;
-    set_next_arg(res, tok, size);
-
-    int val;
-    foreach_args(val, tok, size) {
-        if (!val) {
-            g_eval_error = ERROR_DIV_BY_ZERO;
-            return 0;
-        }
-
-        res %= val;
-    } end_foreach_args();
-
-    return res;
+    return reduce(tok, size, false, 0, _mod);
 }
+
+static int _mul(int a, int b) { return a * b; }
 
 static int func_mul(struct token *tok, size_t size)
 {
-    int res = 1;
-    int val;
-    foreach_args(val, tok, size) {
-        res *= val;
-    } end_foreach_args();
-
-    return res;
+    return reduce(tok, size, true, 1, _mul);
 }
 
 static int func_pwm(struct token *tok, size_t size)
@@ -298,19 +299,11 @@ static int func_pwm(struct token *tok, size_t size)
     return 0;
 }
 
+static int _sub(int a, int b) { return a - b; }
+
 static int func_sub(struct token *tok, size_t size)
 {
-    if (!more_args(tok, size)) return 0;
-
-    int res;
-    set_next_arg(res, tok, size);
-
-    int val;
-    foreach_args(val, tok, size) {
-        res -= val;
-    } end_foreach_args();
-
-    return res;
+    return reduce(tok, size, false, 0, _sub);
 }
 
 static int func_undef(struct token *tok, size_t size)
