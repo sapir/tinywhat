@@ -10,7 +10,7 @@
 
 struct token cur_token = { TOKEN_NULL };
 struct token last_token = { TOKEN_NULL };
-// TOKEN_KEYWORD - number of letters input so far, -1
+// TOKEN_KEYWORD - number of letters input so far, starting at -1
 // TOKEN_NUMBER - number value
 int state;
 
@@ -27,7 +27,7 @@ static void starttoken(void) {
 
     case TOKEN_VAR:
     case TOKEN_UDF:
-        if (get_token_val(&last_token) < 0) {
+        if (is_token_val_unset(&last_token)) {
             set_token(&last_token, TOKEN_KEYWORD, KWD_BAD);
         }
         break;
@@ -52,35 +52,35 @@ struct new_token_id {
 };
 
 static PROGMEM const struct new_token_id special_chars[] = {
-    { '(', _make_token_type_and_val(TOKEN_LPARENS, 0) },
-    { ')', _make_token_type_and_val(TOKEN_RPARENS, 0) },
-    { '$', _make_token_type_and_val(TOKEN_VAR, TOKEN_VAL_UNSET) },
-    { '@', _make_token_type_and_val(TOKEN_UDF, TOKEN_VAL_UNSET) },
-    { '=', _make_token_type_and_val(TOKEN_KEYWORD, KWD_eq) },
-    { '+', _make_token_type_and_val(TOKEN_KEYWORD, KWD_add) },
-    { '-', _make_token_type_and_val(TOKEN_KEYWORD, KWD_sub) },
-    { '*', _make_token_type_and_val(TOKEN_KEYWORD, KWD_mul) },
-    { '/', _make_token_type_and_val(TOKEN_KEYWORD, KWD_div) },
-    { '%', _make_token_type_and_val(TOKEN_KEYWORD, KWD_mod) },
+    { '(', make_token_type_and_val(TOKEN_LPARENS, 0) },
+    { ')', make_token_type_and_val(TOKEN_RPARENS, 0) },
+    { '$', make_token_type_and_val(TOKEN_VAR, TOKEN_VAL_UNSET) },
+    { '@', make_token_type_and_val(TOKEN_UDF, TOKEN_VAL_UNSET) },
+    { '=', make_token_type_and_val(TOKEN_KEYWORD, KWD_eq) },
+    { '+', make_token_type_and_val(TOKEN_KEYWORD, KWD_add) },
+    { '-', make_token_type_and_val(TOKEN_KEYWORD, KWD_sub) },
+    { '*', make_token_type_and_val(TOKEN_KEYWORD, KWD_mul) },
+    { '/', make_token_type_and_val(TOKEN_KEYWORD, KWD_div) },
+    { '%', make_token_type_and_val(TOKEN_KEYWORD, KWD_mod) },
 
     // whitespace
-    { ' ',  _make_token_type_and_val(TOKEN_NULL, 0) },
-    { '\t', _make_token_type_and_val(TOKEN_NULL, 0) },
-    { '\n', _make_token_type_and_val(TOKEN_NULL, 0) },
+    { ' ',  make_token_type_and_val(TOKEN_NULL, 0) },
+    { '\t', make_token_type_and_val(TOKEN_NULL, 0) },
+    { '\n', make_token_type_and_val(TOKEN_NULL, 0) },
 
     { '\0', 0 },
 };
 
 static PROGMEM const struct new_token_id keywords[] = {
-    { 'c', _make_token_type_and_val(TOKEN_KEYWORD, KWD_cfgio) },
-    { 'd', _make_token_type_and_val(TOKEN_KEYWORD, KWD_def) },
-    { 'f', _make_token_type_and_val(TOKEN_KEYWORD, KWD_for) },
-    { 'i', _make_token_type_and_val(TOKEN_KEYWORD, KWD_if) },
-    // { 'i', _make_token_type_and_val(TOKEN_KEYWORD, KWD_io) },
-    { 'p', _make_token_type_and_val(TOKEN_KEYWORD, KWD_pwm) },
-    { 's', _make_token_type_and_val(TOKEN_KEYWORD, KWD_set) },
-    { 'u', _make_token_type_and_val(TOKEN_KEYWORD, KWD_undef) },
-    { 'w', _make_token_type_and_val(TOKEN_KEYWORD, KWD_wait) },
+    { 'c', make_token_type_and_val(TOKEN_KEYWORD, KWD_cfgio) },
+    { 'd', make_token_type_and_val(TOKEN_KEYWORD, KWD_def) },
+    { 'f', make_token_type_and_val(TOKEN_KEYWORD, KWD_for) },
+    { 'i', make_token_type_and_val(TOKEN_KEYWORD, KWD_if) },
+    // { 'i', make_token_type_and_val(TOKEN_KEYWORD, KWD_io) },
+    { 'p', make_token_type_and_val(TOKEN_KEYWORD, KWD_pwm) },
+    { 's', make_token_type_and_val(TOKEN_KEYWORD, KWD_set) },
+    { 'u', make_token_type_and_val(TOKEN_KEYWORD, KWD_undef) },
+    { 'w', make_token_type_and_val(TOKEN_KEYWORD, KWD_wait) },
 
     { '\0', 0 },
 };
@@ -118,21 +118,21 @@ bool lexer_input(char c)
 
     if ('a' <= c && c <= 'z') {
         if (get_token_type(&cur_token) == TOKEN_VAR) {
-            if (get_token_val(&cur_token) < 0) {
+            if (is_token_val_unset(&cur_token)) {
                 int index = var_name_to_index(c);
                 if (index < 0) {
                     g_eval_error = ERROR_SYNTAX;
                     // invalidate this token
                     set_token(&cur_token, TOKEN_KEYWORD, KWD_BAD);
                 } else {
-                    set_token_val(&cur_token, index);
+                    set_token_val(&cur_token, from_var_index(index));
                 }
             }
             return false;
         }
 
         if (get_token_type(&cur_token) == TOKEN_UDF) {
-            if (get_token_val(&cur_token) < 0) {
+            if (is_token_val_unset(&cur_token)) {
                 set_token_val(&cur_token, from_udf_name(c));
             }
             return false;

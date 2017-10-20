@@ -189,7 +189,7 @@ static int func_for(struct token *tok, size_t size)
         return 0;
     }
 
-    int var = get_token_val(tok);
+    int var = to_var_index(get_token_val(tok));
     skip_arg(tok, size, get_token_type_size(TOKEN_VAR));
 
     int start;
@@ -252,7 +252,7 @@ static int func_set(struct token *tok, size_t size)
         return 0;
     }
 
-    int var = get_token_val(tok);
+    int var = to_var_index(get_token_val(tok));
     skip_arg(tok, size, get_token_type_size(TOKEN_VAR));
 
     int val;
@@ -335,7 +335,7 @@ static int eval_udf_call(char name, struct token *tok, size_t size)
         return 0;
 
     if (get_token_type(sf_tok) == TOKEN_VAR) {
-        int i = get_token_val(sf_tok);
+        int i = to_var_index(get_token_val(sf_tok));
         skip_arg(sf_tok, sf_size, get_token_type_size(TOKEN_VAR));
 
         // set arguments starting at start_var
@@ -405,7 +405,7 @@ int eval(struct token *tok, size_t size, size_t *used)
     switch (get_token_type(tok)) {
     case TOKEN_VAR:
         *used = get_token_size(tok);
-        return vars[get_token_val(tok)];
+        return vars[to_var_index(get_token_val(tok))];
 
     case TOKEN_NUMBER:
         *used = get_token_size(tok);
