@@ -11,11 +11,14 @@ int vars[NUM_VARS];
 
 int var_name_to_index(char name)
 {
-    for (int i = 0; pgm_read_byte(&var_names[i]); ++i) {
+    int i = 0;
+    do {
         if (pgm_read_byte(&var_names[i]) == name) {
             return i;
         }
-    }
+
+        ++i;
+    } while (pgm_read_byte(&var_names[i]));
 
     return -1;
 }
