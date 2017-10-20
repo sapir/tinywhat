@@ -67,24 +67,18 @@ char uart_getc(void)
 
 void uart_putc(char c)
 {
-    // start bit
-    PORTB &= ~_BV(PORTB2);
-    __builtin_avr_delay_cycles(CYCLES_PER_BIT);
+    // set up value to be transmitted, including zero start & stop bits, and a 1
+    // bit after the stop bit so that output is left high. note that value will
+    // be transmitted lsb first, so start bit is lsb.
+    int val = 0 | (c << 1) | 0 << 9 | 1 << 10;
 
-    // write bits, lsb first
-    for (int i = 0; i < 8; ++i) {
-        _set_bit_val(PORTB, PORTB2, c & 1);
-        c >>= 1;
+    for (int i = 0; i < 11; ++i) {
+        _set_bit_val(PORTB, PORTB2, val & 1);
+        val >>= 1;
 
+        // this is unnecessary on the last iteration, but it's easier to keep it
         __builtin_avr_delay_cycles(CYCLES_PER_BIT);
     }
-
-    // stop bit
-    PORTB &= ~_BV(PORTB2);
-    __builtin_avr_delay_cycles(CYCLES_PER_BIT);
-
-    // complete by setting tx to high again
-    PORTB |= _BV(PORTB2);
 }
 
 void uart_puts(const char *s)
