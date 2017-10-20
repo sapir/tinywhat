@@ -92,11 +92,6 @@ void uart_puts(const char *s)
 
 void uart_putnum(int n)
 {
-    if (!n) {
-        uart_putc('0');
-        return;
-    }
-
     if (n < 0) {
         uart_putc('-');
         n = -n;
@@ -104,10 +99,10 @@ void uart_putnum(int n)
 
     char buf[6];
     int i = 0;
-    while (n) {
+    do {
         buf[i++] = (n % 10) + '0';
         n /= 10;
-    }
+    } while (n);
 
     do {
         uart_putc(buf[--i]);
