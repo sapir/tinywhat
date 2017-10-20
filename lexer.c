@@ -51,12 +51,14 @@ static bool last_token_is_valid(void) {
 }
 
 
-struct special_char {
+// tells lexer_input how to identify a new token by its first character, and
+// how to set it up
+struct new_token_id {
     char c;
     uint8_t type_and_val;
 };
 
-static PROGMEM const struct special_char special_chars[] = {
+static PROGMEM const struct new_token_id special_chars[] = {
     { '(', _make_token_type_and_val(TOKEN_LPARENS, 0) },
     { ')', _make_token_type_and_val(TOKEN_RPARENS, 0) },
     { '$', _make_token_type_and_val(TOKEN_VAR, -1) },
@@ -76,16 +78,38 @@ static PROGMEM const struct special_char special_chars[] = {
     { '\0', 0 },
 };
 
-bool lexer_input(char c)
+static PROGMEM const struct new_token_id keywords[] = {
+    { 'c', _make_token_type_and_val(TOKEN_KEYWORD, KWD_cfgio) },
+    { 'd', _make_token_type_and_val(TOKEN_KEYWORD, KWD_def) },
+    { 'f', _make_token_type_and_val(TOKEN_KEYWORD, KWD_for) },
+    { 'i', _make_token_type_and_val(TOKEN_KEYWORD, KWD_if) },
+    // { 'i', _make_token_type_and_val(TOKEN_KEYWORD, KWD_io) },
+    { 'p', _make_token_type_and_val(TOKEN_KEYWORD, KWD_pwm) },
+    { 's', _make_token_type_and_val(TOKEN_KEYWORD, KWD_set) },
+    { 'u', _make_token_type_and_val(TOKEN_KEYWORD, KWD_undef) },
+    { 'w', _make_token_type_and_val(TOKEN_KEYWORD, KWD_wait) },
+
+    { '\0', 0 },
+};
+
+// sets token using array, returns true on success
+static bool identify_token(const struct new_token_id *id_array, char c)
 {
-    for (int i = 0; pgm_read_byte(&special_chars[i].c); ++i) {
-        if (c == pgm_read_byte(&special_chars[i].c)) {
+    for (int i = 0; pgm_read_byte(&id_array[i].c); ++i) {
+        if (c == pgm_read_byte(&id_array[i].c)) {
             starttoken();
-            cur_token.type_and_val = pgm_read_byte(
-                &special_chars[i].type_and_val);
-            return last_token_is_valid();
+            cur_token.type_and_val = pgm_read_byte(&id_array[i].type_and_val);
+            return true;
         }
     }
+
+    return false;
+}
+
+bool lexer_input(char c)
+{
+    if (identify_token(special_chars, c))
+        return last_token_is_valid();
 
     if (isdigit(c)) {
         bool new = false;
@@ -138,19 +162,9 @@ bool lexer_input(char c)
             return false;
         }
 
-        starttoken();
-        switch (c) {
-        case 'c': set_token(&cur_token, TOKEN_KEYWORD, KWD_cfgio); break;
-        case 'd': set_token(&cur_token, TOKEN_KEYWORD, KWD_def); break;
-        case 'f': set_token(&cur_token, TOKEN_KEYWORD, KWD_for); break;
-        case 'i': set_token(&cur_token, TOKEN_KEYWORD, KWD_if); break;
-        // case 'i': set_token(&cur_token, TOKEN_KEYWORD, KWD_io); break;
-        case 'p': set_token(&cur_token, TOKEN_KEYWORD, KWD_pwm); break;
-        case 's': set_token(&cur_token, TOKEN_KEYWORD, KWD_set); break;
-        case 'u': set_token(&cur_token, TOKEN_KEYWORD, KWD_undef); break;
-        case 'w': set_token(&cur_token, TOKEN_KEYWORD, KWD_wait); break;
-        default: set_token(&cur_token, TOKEN_KEYWORD, KWD_BAD); break;
-        }
+        if (!identify_token(keywords, c))
+            set_token(&cur_token, TOKEN_KEYWORD, KWD_BAD);
+
         return last_token_is_valid();
     }
 
