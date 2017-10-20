@@ -116,9 +116,7 @@ bool lexer_input(char c)
         return new && last_token_is_valid();
     }
 
-    if (isalpha(c)) {
-        c = tolower(c);
-
+    if ('a' <= c && c <= 'z') {
         if (get_token_type(&cur_token) == TOKEN_VAR) {
             if (get_token_val(&cur_token) < 0) {
                 int index = var_name_to_index(c);
