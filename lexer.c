@@ -61,8 +61,8 @@ struct new_token_id {
 static PROGMEM const struct new_token_id special_chars[] = {
     { '(', _make_token_type_and_val(TOKEN_LPARENS, 0) },
     { ')', _make_token_type_and_val(TOKEN_RPARENS, 0) },
-    { '$', _make_token_type_and_val(TOKEN_VAR, -1) },
-    { '@', _make_token_type_and_val(TOKEN_UDF, -1) },
+    { '$', _make_token_type_and_val(TOKEN_VAR, TOKEN_VAL_UNSET) },
+    { '@', _make_token_type_and_val(TOKEN_UDF, TOKEN_VAL_UNSET) },
     { '=', _make_token_type_and_val(TOKEN_KEYWORD, KWD_eq) },
     { '+', _make_token_type_and_val(TOKEN_KEYWORD, KWD_add) },
     { '-', _make_token_type_and_val(TOKEN_KEYWORD, KWD_sub) },

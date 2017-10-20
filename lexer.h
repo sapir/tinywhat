@@ -45,6 +45,10 @@ struct token {
 #define TOKEN_TYPE_SHIFT 5
 #define TOKEN_VAL_MASK 0x1f
 #define TOKEN_VAL_SIZE 5
+// set all bits
+#define TOKEN_VAL_MINUS1 TOKEN_VAL_MASK
+// for val and udf
+#define TOKEN_VAL_UNSET TOKEN_VAL_MINUS1
 
     uint8_t extra_num;
 } __attribute__((packed));
@@ -60,15 +64,16 @@ static inline enum token_type get_token_type(struct token *tok) {
 static inline int8_t get_token_val(struct token *tok) {
     int8_t val = tok->type_and_val & TOKEN_VAL_MASK;
     // sign extend
-    return (val == 0x1f) ? -1 : val;
+    return (val == TOKEN_VAL_MINUS1) ? -1 : val;
 }
 
+// note this assumes 0 <= val < TOKEN_VAL_MINUS1
 #define _make_token_type_and_val(type, val) \
     (((type) << TOKEN_TYPE_SHIFT) | (val))
 
 static inline uint8_t make_token_type_and_val(enum token_type type, int8_t val)
 {
-    if (val < 0) val = 0x1f;
+    if (val < 0) val = TOKEN_VAL_MINUS1;
     return _make_token_type_and_val(type, val);
 }
 
@@ -79,7 +84,7 @@ static inline void set_token(struct token *tok, enum token_type type, int8_t val
 
 static inline void set_token_val(struct token *tok, int8_t val)
 {
-    if (val < 0) val = 0x1f;
+    if (val < 0) val = TOKEN_VAL_MINUS1;
     tok->type_and_val = (tok->type_and_val & ~TOKEN_VAL_MASK) | val;
 }
 
