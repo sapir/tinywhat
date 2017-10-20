@@ -102,11 +102,16 @@ void uart_putnum(int n)
         n = -n;
     }
 
+    char buf[6];
+    int i = 0;
     while (n) {
-        uint8_t digit = n % 10;
-        uart_putc(digit + '0');
+        buf[i++] = (n % 10) + '0';
         n /= 10;
     }
+
+    do {
+        uart_putc(buf[--i]);
+    } while (i);
 }
 
 void uart_setup(void)
