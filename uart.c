@@ -99,15 +99,15 @@ void uart_putnum(int n)
 
     // we won't be using a null terminator, so -1
     char buf[sizeof("32768") - 1];
-    int i = 0;
+    char *p = buf;
     do {
-        buf[i++] = (n % 10) + '0';
+        *p++ = (n % 10) + '0';
         n /= 10;
     } while (n);
 
     do {
-        uart_putc(buf[--i]);
-    } while (i);
+        uart_putc(*--p);
+    } while (p != buf);
 }
 
 void uart_setup(void)
