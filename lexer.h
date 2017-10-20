@@ -80,10 +80,11 @@ static inline void set_token_val(struct token *tok, int8_t val)
     tok->type_and_val = (tok->type_and_val & ~TOKEN_VAL_MASK) | val;
 }
 
-// convert TOKEN_UDF value to a lowercase letter
+// convert TOKEN_UDF value to a lowercase letter, assuming it's not
+// TOKEN_VAL_UNSET
 static inline char to_udf_name(int8_t val)
 {
-    return val ? ((val - 1) | 0x60) : 0;
+    return ((val - 1) + 0x60);
 }
 
 static inline char from_udf_name(char c)
