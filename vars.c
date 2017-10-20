@@ -1,8 +1,9 @@
 #include <string.h>
+#include "pgmspace.h"
 #include "vars.h"
 
 
-const char var_names[] = "abcdeijk";
+static PROGMEM const char var_names[] = "abcdeijk";
 
 
 int vars[NUM_VARS];
@@ -10,11 +11,16 @@ int vars[NUM_VARS];
 
 int var_name_to_index(char name)
 {
-    char *p = strchr(var_names, name);
-    return p ? p - var_names : -1;
+    for (int i = 0; pgm_read_byte(&var_names[i]); ++i) {
+        if (pgm_read_byte(&var_names[i]) == name) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 char var_index_to_name(int index)
 {
-    return var_names[index];
+    return pgm_read_byte(&var_names[index]);
 }
