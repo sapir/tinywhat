@@ -97,7 +97,8 @@ void uart_putnum(int n)
         n = -n;
     }
 
-    char buf[6];
+    // we won't be using a null terminator, so -1
+    char buf[sizeof("32768") - 1];
     int i = 0;
     do {
         buf[i++] = (n % 10) + '0';
