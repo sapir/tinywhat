@@ -50,6 +50,7 @@ static size_t get_arg_size(struct token *tok, size_t size)
     }
 }
 
+
 #define more_args(tok, size) (size > 0 && get_token_type(tok) != TOKEN_RPARENS)
 
 #define skip_arg(tok, size, used) \
@@ -58,27 +59,31 @@ static size_t get_arg_size(struct token *tok, size_t size)
         tok = (void*)tok + (used); \
     } while(0)
 
-#define set_next_arg(val, tok, size) \
-    do { \
-        size_t __used; \
-        val = eval(tok, size, &__used); \
-        if (!__used) { g_eval_error = ERROR_SYNTAX; return 0; } \
-        skip_arg(tok, size, __used); \
-    } while(0)
+// TODO: caller needs to check g_eval_error
+// gets next arg, returns false if no more args
+bool next_arg(struct token **tokp, size_t *sizep, int *valp)
+{
+    if (!more_args(*tokp, *sizep))
+        return false;
+
+    size_t used;
+    *valp = eval(*tokp, *sizep, &used);
+    if (g_eval_error)
+        return false;
+
+    skip_arg(*tokp, *sizep, used);
+    return true;
+}
 
 #define foreach_args(val, tok, size) \
-    while (more_args(tok, size)) { \
-        set_next_arg(val, tok, size); \
-
-#define end_foreach_args() \
-    }
+    while (next_arg(&(tok), &(size), &(val)))
 
 
 // evaluate expressions until out of room, return last value
 static int exec_block(struct token *tok, size_t size)
 {
     int val;
-    foreach_args(val, tok, size) { (void)val; } end_foreach_args();
+    foreach_args(val, tok, size) {}
     return val;
 }
 
@@ -90,8 +95,7 @@ static int reduce(struct token *tok, size_t size, bool use_start, int start,
     if (use_start) {
         res = start;
     } else {
-        if (!more_args(tok, size)) return 0;
-        set_next_arg(res, tok, size);
+        if (!next_arg(&tok, &size, &res)) return 0;
     }
 
     int val;
@@ -99,7 +103,7 @@ static int reduce(struct token *tok, size_t size, bool use_start, int start,
         res = func(res, val);
 
         if (g_eval_error) return res;
-    } end_foreach_args();
+    }
 
     return res;
 }
@@ -114,18 +118,13 @@ static int func_add(struct token *tok, size_t size)
 static int func_cfgio(struct token *tok, size_t size)
 {
     int pin, input, value;
+    if (!next_arg(&tok, &size, &pin)) return 0;
+    if (!next_arg(&tok, &size, &input)) return 0;
 
-    if (!more_args(tok, size)) return 0;
-    set_next_arg(pin, tok, size);
-
-    if (!more_args(tok, size)) return 0;
-    set_next_arg(input, tok, size);
-
-    if (more_args(tok, size))
-        set_next_arg(value, tok, size);
-    else
+    if (!next_arg(&tok, &size, &value)) {
         // default to 1 (pullup) for input, 0 (low) for output
         value = input;
+    }
 
     return cfg_pin(pin, input, value);
 }
@@ -172,15 +171,13 @@ static int func_div(struct token *tok, size_t size)
 
 static int func_eq(struct token *tok, size_t size)
 {
-    if (!more_args(tok, size)) return 0;
-
     int val1;
-    set_next_arg(val1, tok, size);
+    if (!next_arg(&tok, &size, &val1)) return 0;
 
     int val2;
     foreach_args(val2, tok, size) {
         if (val2 != val1) return 0;
-    } end_foreach_args();
+    }
 
     return 1;
 }
@@ -196,18 +193,18 @@ static int func_for(struct token *tok, size_t size)
     skip_arg(tok, size, get_token_type_size(TOKEN_VAR));
 
     int start;
-    if (!more_args(tok, size)) {
+    if (!next_arg(&tok, &size, &start)) {
+        // TODO: change error only if no existing error
         g_eval_error = ERROR_SYNTAX;
         return 0;
     }
-    set_next_arg(start, tok, size);
 
     int end;
-    if (!more_args(tok, size)) {
+    if (!next_arg(&tok, &size, &end)) {
+        // TODO: change error only if no existing error
         g_eval_error = ERROR_SYNTAX;
         return 0;
     }
-    set_next_arg(end, tok, size);
 
     int val = 0;
     for (int i = start; i < end; ++i) {
@@ -220,19 +217,18 @@ static int func_for(struct token *tok, size_t size)
 
 static int func_if(struct token *tok, size_t size)
 {
-    if (!more_args(tok, size)) return 0;
-
     int val;
-    set_next_arg(val, tok, size);
+    if (!next_arg(&tok, &size, &val)) return 0;
 
     if (!val) {
+        // skip "true" without evaluating, so we evaluate "false" clause instead
         if (!more_args(tok, size)) return 0;
         size_t used = get_arg_size(tok, size);
         skip_arg(tok, size, used);
     }
 
-    if (!more_args(tok, size)) return 0;
-    set_next_arg(val, tok, size);
+    // evaluate value specified for "true"
+    if (!next_arg(&tok, &size, &val)) return 0;
     return val;
 }
 
@@ -240,11 +236,9 @@ static int func_io(struct token *tok, size_t size)
 {
     int pin, value;
 
-    if (!more_args(tok, size)) return 0;
-    set_next_arg(pin, tok, size);
+    if (!next_arg(&tok, &size, &pin)) return 0;
 
-    if (more_args(tok, size)) {
-        set_next_arg(value, tok, size);
+    if (next_arg(&tok, &size, &value)) {
         return set_pin(pin, value);
     } else {
         return get_pin(pin);
@@ -259,15 +253,15 @@ static int func_set(struct token *tok, size_t size)
     }
 
     int var = get_token_val(tok);
-    size -= get_token_size(tok);
-    tok = get_next_token(tok);
-    if (!more_args(tok, size)) {
+    skip_arg(tok, size, get_token_type_size(TOKEN_VAR));
+
+    int val;
+    if (!next_arg(&tok, &size, &val)) {
+        // TODO: set only if no existing error
         g_eval_error = ERROR_SYNTAX;
         return 0;
     }
 
-    int val;
-    set_next_arg(val, tok, size);
     vars[var] = val;
     return val;
 }
@@ -350,7 +344,7 @@ static int eval_udf_call(char name, struct token *tok, size_t size)
             vars[i] = val;
             ++i;
             i %= NUM_VARS;
-        } end_foreach_args();
+        }
     }
 
     return exec_block(sf_tok, sf_size);
