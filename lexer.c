@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "vars.h"
+#include "eval.h"
 #include "lexer.h"
 
 
@@ -90,7 +91,7 @@ bool lexer_input(char c)
             if (get_token_val(&cur_token) < 0) {
                 int index = var_name_to_index(c);
                 if (index < 0) {
-                    printf("bad variable name\n");
+                    g_eval_error = ERROR_SYNTAX;
                     // invalidate this token
                     set_token(&cur_token, TOKEN_KEYWORD, KWD_BAD);
                 } else {

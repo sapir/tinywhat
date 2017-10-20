@@ -18,6 +18,7 @@ enum eval_error {
 int eval(struct token *tok, size_t size, size_t *used);
 
 
+// TODO: not just for eval anymore, is also used by lexer
 extern enum eval_error g_eval_error;
 
 
