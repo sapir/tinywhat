@@ -13,7 +13,6 @@ enum token_type {
     TOKEN_KEYWORD,
     TOKEN_VAR,
     TOKEN_UDF,
-    TOKEN_SHORT_NUMBER,
 
     // has an extra byte
     TOKEN_NUMBER,

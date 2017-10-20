@@ -22,14 +22,7 @@ static void starttoken(void) {
 
     switch (get_token_type(&last_token)) {
     case TOKEN_NUMBER:
-        // use inline token value for short numbers
-        // note that state == TOKEN_VAL_MASK is reserved for -1 so we can't
-        // use it
-        if (0 <= state && state < TOKEN_VAL_MASK) {
-            set_token(&last_token, TOKEN_SHORT_NUMBER, state);
-        } else {
-            set_token_num(&last_token, state);
-        }
+        set_token_num(&last_token, state);
         break;
 
     case TOKEN_VAR:

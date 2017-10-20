@@ -407,10 +407,6 @@ int eval(struct token *tok, size_t size, size_t *used)
         *used = get_token_size(tok);
         return vars[get_token_val(tok)];
 
-    case TOKEN_SHORT_NUMBER:
-        *used = get_token_size(tok);
-        return get_token_val(tok);
-
     case TOKEN_NUMBER:
         *used = get_token_size(tok);
         return get_token_num_val(tok);
