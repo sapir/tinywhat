@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include "pgmspace.h"
 #include "vars.h"
 #include "eval.h"
 #include "lexer.h"
@@ -49,27 +50,41 @@ static bool last_token_is_valid(void) {
     return get_token_type(&last_token) != TOKEN_NULL;
 }
 
+
+struct special_char {
+    char c;
+    uint8_t type_and_val;
+};
+
+static PROGMEM const struct special_char special_chars[] = {
+    { '(', _make_token_type_and_val(TOKEN_LPARENS, 0) },
+    { ')', _make_token_type_and_val(TOKEN_RPARENS, 0) },
+    { '$', _make_token_type_and_val(TOKEN_VAR, -1) },
+    { '@', _make_token_type_and_val(TOKEN_UDF, -1) },
+    { '=', _make_token_type_and_val(TOKEN_KEYWORD, KWD_eq) },
+    { '+', _make_token_type_and_val(TOKEN_KEYWORD, KWD_add) },
+    { '-', _make_token_type_and_val(TOKEN_KEYWORD, KWD_sub) },
+    { '*', _make_token_type_and_val(TOKEN_KEYWORD, KWD_mul) },
+    { '/', _make_token_type_and_val(TOKEN_KEYWORD, KWD_div) },
+    { '%', _make_token_type_and_val(TOKEN_KEYWORD, KWD_mod) },
+
+    // whitespace
+    { ' ',  _make_token_type_and_val(TOKEN_NULL, 0) },
+    { '\t', _make_token_type_and_val(TOKEN_NULL, 0) },
+    { '\n', _make_token_type_and_val(TOKEN_NULL, 0) },
+
+    { '\0', 0 },
+};
+
 bool lexer_input(char c)
 {
-    if (isspace(c) || c == '(' || c == ')' || c == '$'
-        || c == '+' || c == '/' || c == '=' || c == '%' || c == '*'
-        || c == '-' || c == '@')
-    {
-        starttoken();
-        switch (c) {
-        case '(': set_token(&cur_token, TOKEN_LPARENS, 0); break;
-        case ')': set_token(&cur_token, TOKEN_RPARENS, 0); break;
-        case '$': set_token(&cur_token, TOKEN_VAR, -1); break;
-        case '@': set_token(&cur_token, TOKEN_UDF, -1); break;
-        case '=': set_token(&cur_token, TOKEN_KEYWORD, KWD_eq); break;
-        case '+': set_token(&cur_token, TOKEN_KEYWORD, KWD_add); break;
-        case '-': set_token(&cur_token, TOKEN_KEYWORD, KWD_sub); break;
-        case '*': set_token(&cur_token, TOKEN_KEYWORD, KWD_mul); break;
-        case '/': set_token(&cur_token, TOKEN_KEYWORD, KWD_div); break;
-        case '%': set_token(&cur_token, TOKEN_KEYWORD, KWD_mod); break;
-        default: set_token(&cur_token, TOKEN_NULL, 0); break;
+    for (int i = 0; pgm_read_byte(&special_chars[i].c); ++i) {
+        if (c == pgm_read_byte(&special_chars[i].c)) {
+            starttoken();
+            cur_token.type_and_val = pgm_read_byte(
+                &special_chars[i].type_and_val);
+            return last_token_is_valid();
         }
-        return last_token_is_valid();
     }
 
     if (isdigit(c)) {

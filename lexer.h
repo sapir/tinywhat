@@ -63,10 +63,13 @@ static inline int8_t get_token_val(struct token *tok) {
     return (val == 0x1f) ? -1 : val;
 }
 
+#define _make_token_type_and_val(type, val) \
+    (((type) << TOKEN_TYPE_SHIFT) | (val))
+
 static inline uint8_t make_token_type_and_val(enum token_type type, int8_t val)
 {
     if (val < 0) val = 0x1f;
-    return (type << TOKEN_TYPE_SHIFT) | val;
+    return _make_token_type_and_val(type, val);
 }
 
 static inline void set_token(struct token *tok, enum token_type type, int8_t val)
