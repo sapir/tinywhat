@@ -13,7 +13,7 @@ struct pin_def {
 static const struct pin_def pin_defs[] = {
     { 2, 0 },
     { 2, 1 },
-    { 1, 5 },
+    { 2, 2 },
     { 1, 4 },
     { 1, 3 },
     { 1, 2 },
