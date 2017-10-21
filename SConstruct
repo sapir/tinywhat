@@ -10,11 +10,11 @@ VariantDir('build_at', '.', duplicate=0)
 VariantDir('build_test', '.', duplicate=0)
 
 env = Environment()
-env['F_CPU'] = 1000000
+env['F_CPU'] = 8000000
 env['MCU'] = 'attiny44a'
 env['CC'] = 'avr-gcc'
 env['OBJCOPY'] = 'avr-objcopy'
-env.Append(CCFLAGS='-Wall -Os -g -flto -mmcu=${MCU} -DF_CPU=${F_CPU} -std=c11')
+env.Append(CCFLAGS='-Wall -Os -g -flto -mmcu=${MCU} -DF_CPU=${F_CPU}UL -std=c11')
 env.Append(LINKFLAGS='-w -Os -g -flto -fuse-linker-plugin -Wl,--gc-sections -mmcu=${MCU}')
 
 env.Program(
@@ -44,6 +44,8 @@ test_env.Program(
 
 # fuses:
 # 	${AVRDUDE_CMD} -Uefuse:w:0xff:m -Uhfuse:w:0xdf:m -Ulfuse:w:0x62:m
+# for 8MHz:
+#  -Uefuse:w:0xff:m -Uhfuse:w:0xdf:m -Ulfuse:w:0xe2:m
 
 # upload: ${HEX}
 # 	${AVRDUDE_CMD} -U $<
